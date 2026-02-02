@@ -13,27 +13,32 @@ This skill provides specialized guidance for developing apps on Freshworks Platf
 - ✅ **Error Classification** - Categorizes errors for better debugging
 - ✅ **React Meta Framework Support** - Comprehensive React development guidance
 - ✅ **Production-Ready Patterns** - Bias toward production-ready architecture
+- ✅ **Migration Support** - Platform 2.x to 3.0/3.1 migration guidance
+- ✅ **Security Auditing** - Secure iparams and vulnerability checks
 
 ## Installation
 
 ### Using Skills Framework
 
 ```bash
-npx skills add <repository-url> --skill freshworks-platform3
+npx skills add <repository-url>
 ```
 
 ### Manual Installation
 
 1. Clone this repository
-2. The skill consists of `SKILL.md` and `knowledge/` directory
-3. Use with Skills framework compatible tools
+2. The skill consists of `SKILL.md` and `references/` directory (aliased as `knowledge/`)
+3. Use with Skills framework compatible tools (e.g., Cursor IDE)
 
 ## Skill Structure
 
 ```
 freshworks-platform3/
-├── SKILL.md              # Main skill file (required)
-└── knowledge/            # Reference documentation
+├── SKILL.md              # Main skill definition
+├── skill.yaml            # Skill metadata
+├── kernel.prompt         # Core prompt
+├── knowledge/            # Symlink to references/
+└── references/           # Reference documentation
     ├── platform3.rules.md
     ├── error.taxonomy.json
     ├── cli.behavior.md
@@ -41,27 +46,33 @@ freshworks-platform3/
     ├── fdk/              # FDK documentation
     ├── server/           # Server-side topics
     ├── migration/        # Migration guides
-    ├── ui/               # UI components
+    ├── ui/               # UI components (Crayons)
     └── use-cases/        # Use case examples
 ```
 
 ## Usage
 
-The skill automatically triggers when Claude needs to:
-- Create new Platform 3.0 apps
-- Debug Platform 3.0 errors
-- Review code for Platform 3.0 compliance
-- Understand Platform 3.0 execution model
-- Develop with React Meta Framework
-- Configure API integrations, OAuth, SMI, scheduled events
-- Work with key-value storage
+The skill automatically triggers when working with:
+- Creating new Platform 3.0 apps
+- Debugging Platform 3.0 errors
+- Reviewing code for Platform 3.0 compliance
+- Understanding Platform 3.0 execution model
+- Developing with React Meta Framework
+- Configuring API integrations, OAuth, SMI, scheduled events
+- Working with key-value storage, entity storage, object store
+- Migrating from Platform 2.x to 3.0/3.1
 
 ## Capabilities
 
-- **Build** - Generate Platform 3.0 compliant code
-- **Debug** - Classify errors and identify violations
-- **Review** - Validate code against Platform 3.0 rules
-- **Explain** - Clarify Platform 3.0 concepts
+| Capability | Description |
+|------------|-------------|
+| **Build** | Generate Platform 3.0 compliant code |
+| **Debug** | Classify errors and identify violations |
+| **Review** | Validate code against Platform 3.0 rules |
+| **Explain** | Clarify Platform 3.0 concepts |
+| **Error-Fix** | Automatically identify and fix errors |
+| **Migrate** | Guide Platform 2.x to 3.0 migrations |
+| **Security-Audit** | Check for security issues |
 
 ## Key Principles
 
@@ -87,25 +98,25 @@ The skill includes comprehensive documentation covering:
 - Error taxonomy and classification
 - CLI behavior and commands
 - React Meta Framework patterns
-- FDK topics (OAuth, request methods, installation parameters)
+- FDK topics (OAuth, request methods, installation parameters, actions)
 - Server-side patterns (SMI, scheduled events, key-value storage)
 - UI components (Crayons)
-- Migration guides
+- Migration guides (Platform 2.x → 3.0/3.1)
 - Use case examples
 
 ## Requirements
 
 - Freshworks Platform 3.0
-- Skills framework compatible environment
+- Skills framework compatible environment (e.g., Cursor IDE)
 
 ## License
 
-[Add your license here]
+MIT
 
 ## Contributing
 
-[Add contribution guidelines if applicable]
+Contributions are welcome! Please ensure any changes maintain Platform 3.0 compliance and follow the established patterns.
 
 ---
 
-**Note:** This skill follows the Skills framework structure. The `SKILL.md` file contains the core skill definition, while `knowledge/` contains reference documentation loaded as needed.
+**Note:** This skill follows the Skills framework structure. The `SKILL.md` file contains the core skill definition, while `references/` (aliased as `knowledge/`) contains reference documentation loaded as needed.
