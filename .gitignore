@@ -69,7 +69,5 @@ TODO.md
 # Development and Testing (not part of skill release)
 .dev/
 
-# AI/IDE Agent Folders (not part of skill release)
-.agents/
-.cursor/
+# Windsurf (internal only)
 .windsurf/

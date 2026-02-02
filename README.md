@@ -18,36 +18,56 @@ This skill provides specialized guidance for developing apps on Freshworks Platf
 
 ## Installation
 
-### Using Skills Framework
+### For Cursor IDE
+
+The skill auto-loads when you clone/open this repository. It includes:
+- `.cursor/rules/freshworks-platform3.mdc` - Cursor Rules format
+- `.cursor/skills/freshworks-platform3/SKILL.md` - Cursor Skills format
+
+### For Other Agent Frameworks
+
+- `.agents/skills/freshworks-platform3/SKILL.md` - Generic agent skill format
+
+### For skills.sh
 
 ```bash
-npx skills add <repository-url>
+# Add from GitHub
+npx skills add https://github.com/freshworks-developers/freshworks-platform3
 ```
 
 ### Manual Installation
 
 1. Clone this repository
 2. The skill consists of `SKILL.md` and `references/` directory (aliased as `knowledge/`)
-3. Use with Skills framework compatible tools (e.g., Cursor IDE)
+3. For Cursor: Rules auto-load from `.cursor/rules/`
+4. For other tools: Use the appropriate skill file from `.agents/` or root `SKILL.md`
 
 ## Skill Structure
 
 ```
 freshworks-platform3/
-├── SKILL.md              # Main skill definition
-├── skill.yaml            # Skill metadata
-├── kernel.prompt         # Core prompt
-├── knowledge/            # Symlink to references/
-└── references/           # Reference documentation
+├── SKILL.md                    # Main skill (skills.sh format)
+├── skill.yaml                  # Skill metadata
+├── kernel.prompt               # Core prompt
+├── knowledge/                  # Symlink to references/
+├── .cursor/                    # Cursor IDE integration
+│   ├── rules/
+│   │   └── freshworks-platform3.mdc
+│   └── skills/
+│       └── freshworks-platform3/SKILL.md
+├── .agents/                    # Other agent frameworks
+│   └── skills/
+│       └── freshworks-platform3/SKILL.md
+└── references/                 # Reference documentation
     ├── platform3.rules.md
     ├── error.taxonomy.json
     ├── cli.behavior.md
     ├── react-meta.md
-    ├── fdk/              # FDK documentation
-    ├── server/           # Server-side topics
-    ├── migration/        # Migration guides
-    ├── ui/               # UI components (Crayons)
-    └── use-cases/        # Use case examples
+    ├── fdk/                    # FDK documentation
+    ├── server/                 # Server-side topics
+    ├── migration/              # Migration guides
+    ├── ui/                     # UI components (Crayons)
+    └── use-cases/              # Use case examples
 ```
 
 ## Usage
