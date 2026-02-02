@@ -18,29 +18,54 @@ This skill provides specialized guidance for developing apps on Freshworks Platf
 
 ## Installation
 
-### For Cursor IDE
+### Quick Install (Recommended)
 
-The skill auto-loads when you clone/open this repository. It includes:
-- `.cursor/rules/freshworks-platform3.mdc` - Cursor Rules format
-- `.cursor/skills/freshworks-platform3/SKILL.md` - Cursor Skills format
+The skill includes an automatic installer that works with Cursor and other agent frameworks:
 
-### For Other Agent Frameworks
+```bash
+# From npm (when published)
+npx @freshworks-developers/freshworks-platform3-skill
 
-- `.agents/skills/freshworks-platform3/SKILL.md` - Generic agent skill format
+# From GitHub
+npx github:freshworks-developers/freshworks-platform3
 
-### For skills.sh
+# Or as a dependency
+npm install @freshworks-developers/freshworks-platform3-skill
+```
+
+The installer will:
+- ✅ Auto-detect your project directory
+- ✅ Copy skill files to `.cursor/rules/` and `.cursor/skills/`
+- ✅ Copy agent files to `.agents/skills/`
+- ✅ Show installation summary
+
+**After installation:** Restart Cursor IDE to load the skill.
+
+### Manual Installation
+
+#### For Cursor IDE
+
+1. Clone this repository
+2. Copy `.cursor/` folder to your project root:
+   ```bash
+   cp -r /path/to/freshworks-platform3/.cursor /path/to/your-project/
+   ```
+3. Restart Cursor IDE
+
+#### For Other Agent Frameworks
+
+1. Clone this repository
+2. Copy `.agents/` folder to your project root:
+   ```bash
+   cp -r /path/to/freshworks-platform3/.agents /path/to/your-project/
+   ```
+
+#### For skills.sh
 
 ```bash
 # Add from GitHub
 npx skills add https://github.com/freshworks-developers/freshworks-platform3
 ```
-
-### Manual Installation
-
-1. Clone this repository
-2. The skill consists of `SKILL.md` and `references/` directory (aliased as `knowledge/`)
-3. For Cursor: Rules auto-load from `.cursor/rules/`
-4. For other tools: Use the appropriate skill file from `.agents/` or root `SKILL.md`
 
 ## Skill Structure
 
