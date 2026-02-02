@@ -32,24 +32,22 @@ Use this skill when:
 - Backend communicates with frontend via callback responses
 - Each request/response is stateless
 
-### Refusal Logic
-Refuse and respond with "Insufficient platform certainty." when:
-- User mixes Platform 2.x and 3.0 APIs or patterns
-- User asks "guess why" or requests speculation without source
-- User discusses logs without execution context (frontend vs backend)
-- User requests behavior not explicitly documented in Platform 3.0
-- User asks for workarounds that violate execution boundaries
-
-### Rules
+### Rules - CRITICAL
+- **ONLY use Platform 3.0 specifications** - Never use Platform 2.x or 2.3 docs
+- Platform 2.3 documentation exists for reference ONLY - NEVER use it for code generation
+- All apps MUST use `"platform-version": "3.0"` in manifest.json
 - Never assume behavior not explicitly defined in Platform 3.0
 - Never mix frontend and backend execution models
-- Reject legacy (2.x) APIs, patterns, or snippets silently
-- If certainty < 100%, respond with: "Insufficient platform certainty."
+- Reject legacy (2.x, 2.3) APIs, patterns, or snippets completely
+- Always use the Platform 3.0 patterns provided below
+- Generate working code based ONLY on Platform 3.0 specifications
 
 ### You must:
-- Enforce manifest correctness
-- Classify every error according to taxonomy
-- Bias toward production-ready architecture
+- Enforce manifest correctness with `"platform-version": "3.0"` (NOT 2.3)
+- Use proper Platform 3.0 execution boundaries (frontend vs backend)
+- Bias toward production-ready Platform 3.0 architecture
+- Use ONLY the Platform 3.0 patterns and examples provided in this skill
+- IGNORE all Platform 2.3 documentation completely
 
 ## Quick Reference
 
@@ -64,35 +62,81 @@ Refuse and respond with "Insufficient platform certainty." when:
 - Data storage: Use `$db` for backend, `client.db` for frontend
 - OAuth: Configure in `config/oauth_config.json` and `config/requests.json`
 
-## File Structure
+## App Structures (from `fdk create`)
 
-### Frontend App
+### Type 1: Frontend App
+Generated with: `fdk create --app-dir frontend-app`
+
 ```
-app-name/
+frontend-app/
+├── manifest.json          # Platform 3.0, location config
+├── app/
+│   ├── index.html
+│   ├── scripts/
+│   │   └── app.js         # Uses app.initialized() and client
+│   └── styles/
+│       ├── style.css
+│       └── images/
+│           └── icon.svg
+└── config/
+    ├── iparams.json       # Optional
+    └── iparams.html       # Optional custom UI
+```
+
+### Type 2: Serverless App
+Generated with: `fdk create --products freshdesk --template your_first_serverless_app`
+
+```
+serverless-app/
+├── manifest.json          # Platform 3.0, events config
+├── server/
+│   └── server.js          # exports = { methods }
+└── config/
+    ├── iparams.json
+    └── requests.json      # External API templates
+```
+
+### Type 3: Hybrid App (Frontend + SMI)
+```
+hybrid-app/
+├── manifest.json          # Platform 3.0, location + events
+├── app/
+│   ├── index.html
+│   ├── scripts/
+│   │   └── app.js         # Calls client.request.invoke()
+│   └── styles/style.css
+├── server/
+│   └── server.js          # SMI methods
+└── config/
+    ├── iparams.json
+    └── requests.json      # Backend API calls
+```
+
+**Pattern:** Frontend calls backend via `client.request.invoke("methodName", data)`
+
+### Type 4: OAuth App
+```
+oauth-app/
 ├── manifest.json
 ├── app/
 │   ├── index.html
-│   ├── app.js
+│   ├── scripts/app.js
 │   └── styles/style.css
-└── config/
-    ├── iparams.json
-    └── requests.json
-```
-
-### Serverless App
-```
-app-name/
-├── manifest.json
 ├── server/
 │   └── server.js
 └── config/
     ├── iparams.json
-    └── requests.json
+    ├── iparams.html       # OAuth setup UI
+    ├── requests.json      # Uses <%= access_token %>
+    └── oauth_config.json  # OAuth provider config
 ```
 
 ## Key Code Patterns
 
 ### Manifest.json
+
+**CRITICAL: Always use `"platform-version": "3.0"` - NEVER use 2.3 or 2.x**
+
 ```json
 {
   "platform-version": "3.0",
@@ -142,21 +186,41 @@ document.addEventListener("DOMContentLoaded", function() {
 ```javascript
 exports = {
   methodName: async function(args) {
-    const response = await $request.invokeTemplate("api_call", {});
-    return JSON.parse(response.body);
+    // Access iparams via args.iparams
+    const apiKey = args.iparams.api_key;
+    const domain = args.iparams.domain;
+    
+    // Use $request.invokeTemplate for external API calls
+    const response = await $request.invokeTemplate("api_call", {
+      context: { id: "123" },
+      body: JSON.stringify({ key: "value" })
+    });
+    
+    // Response is in response.response, not response.body
+    return JSON.parse(response.response);
   }
 };
+```
+
+**Critical:** In server.js, always access installation parameters via `args.iparams`:
+```javascript
+// ✅ CORRECT
+const token = args.iparams.api_token;
+
+// ❌ WRONG - Don't use $iparams or client.iparams in server.js
 ```
 
 ## Constraints
 
 ### Disallowed Patterns
+- **Platform 2.3 or 2.x APIs** - NEVER use legacy platform versions
 - `window.fetch` from backend
 - `fs.writeFile` in frontend context
 - Global variable caching in serverless
 - Frontend API key usage
-- Platform 2.x APIs or patterns
+- Platform 2.x or 2.3 patterns, APIs, or manifest structures
 - `setTimeout`/`setInterval` in serverless
+- Any code patterns from Platform 2.3 documentation
 
 ### Required Patterns
 - `await` for async calls

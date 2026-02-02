@@ -1,6 +1,0 @@
-{
-  "CONFIG": ["invalid app.json", "missing scopes"],
-  "RUNTIME": ["unhandled promise", "timeout"],
-  "PLATFORM": ["invalid module binding"],
-  "API": ["401", "429", "pagination misuse"]
-}

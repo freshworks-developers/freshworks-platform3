@@ -88,6 +88,7 @@ Load these references as needed:
 - [fdk/logging.md](knowledge/fdk/logging.md) - Logging for SMI and Jobs
 - [fdk/cli.md](knowledge/fdk/cli.md) - CLI commands (run, validate, generate, pack)
 - [fdk/modular_apps.md](knowledge/fdk/modular_apps.md) - Modular apps and placeholders
+- [fdk/fdk_create.md](knowledge/fdk/fdk_create.md) - FDK create command and app structures (frontend, serverless, hybrid, OAuth)
 - [fdk/fdk-docs/actions-docs.md](knowledge/fdk/fdk-docs/actions-docs.md) - Actions configuration and implementation
 
 **Server-Side Topics:**

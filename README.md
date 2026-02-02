@@ -18,49 +18,67 @@ This skill provides specialized guidance for developing apps on Freshworks Platf
 
 ## Installation
 
-### Quick Install (Recommended)
+### Option 1: Local Installation (For Development)
 
-The skill includes an automatic installer that works with Cursor and other agent frameworks:
+**Prerequisites:**
+- Cursor IDE installed
+- Node.js (for npx command)
+
+**Steps:**
+
+1. **Clone the repository:**
+   ```bash
+   cd /path/to/your-workspace
+   git clone https://github.com/freshworks-developers/freshworks-platform3.git
+   ```
+
+2. **Install skill locally using npx:**
+   ```bash
+   cd your-freshworks-app
+   npx /path/to/freshworks-platform3
+   ```
+   
+   This will automatically:
+   - ✅ Copy skill files to `.cursor/rules/`
+   - ✅ Copy skill files to `.cursor/skills/freshworks-platform3/`
+   - ✅ Copy agent files to `.agents/skills/freshworks-platform3/`
+   - ✅ Show installation summary
+
+3. **Restart Cursor IDE** to load the skill
+
+4. **Verify installation:**
+   - Open Cursor Settings → Rules
+   - You should see `freshworks-platform3.mdc` listed
+
+**Manual Local Installation:**
+
+If you prefer manual installation:
 
 ```bash
-# From npm (when published)
-npx @freshworks-developers/freshworks-platform3-skill
+# For Cursor IDE
+cp -r /path/to/freshworks-platform3/.cursor /path/to/your-project/
 
-# From GitHub
-npx github:freshworks-developers/freshworks-platform3
-
-# Or as a dependency
-npm install @freshworks-developers/freshworks-platform3-skill
+# For other agent frameworks
+cp -r /path/to/freshworks-platform3/.agents /path/to/your-project/
 ```
 
-The installer will:
-- ✅ Auto-detect your project directory
-- ✅ Copy skill files to `.cursor/rules/` and `.cursor/skills/`
-- ✅ Copy agent files to `.agents/skills/`
-- ✅ Show installation summary
+Then restart Cursor IDE.
 
-**After installation:** Restart Cursor IDE to load the skill.
+### Option 2: NPM Installation (When Published)
 
-### Manual Installation
+> **Note:** This package is not yet published to npm. Use local installation above.
 
-#### For Cursor IDE
+Once published, you'll be able to install via:
 
-1. Clone this repository
-2. Copy `.cursor/` folder to your project root:
-   ```bash
-   cp -r /path/to/freshworks-platform3/.cursor /path/to/your-project/
-   ```
-3. Restart Cursor IDE
+```bash
+# From npm
+npm install @freshworks-developers/freshworks-platform3-skill
 
-#### For Other Agent Frameworks
+# Or use npx directly
+npx @freshworks-developers/freshworks-platform3-skill
+```
 
-1. Clone this repository
-2. Copy `.agents/` folder to your project root:
-   ```bash
-   cp -r /path/to/freshworks-platform3/.agents /path/to/your-project/
-   ```
-
-#### For skills.sh
+### Option 3: For skills.sh
 
 ```bash
 # Add from GitHub
