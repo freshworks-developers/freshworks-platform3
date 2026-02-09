@@ -43,6 +43,72 @@ When user says "Freshdesk app" or "Freshservice app":
 
 ---
 
+## Code Quality Patterns (ALWAYS ENFORCE)
+
+**These patterns prevent common FDK validation failures:**
+
+### ✅ Pattern 1: Proper Async Scoping
+```javascript
+// ❌ WRONG: Variable in different scope
+let client;
+async function init() {
+  client = await app.initialized();  // Race condition!
+}
+
+// ✅ CORRECT: IIFE pattern
+(async function() {
+  const client = await app.initialized();
+  // Use client here
+})();
+```
+
+### ✅ Pattern 2: Low Complexity Functions
+```javascript
+// ❌ WRONG: Nested complexity > 7
+async function process() {
+  if (a) {
+    if (b) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].valid) {
+          // Deep nesting
+        }
+      }
+    }
+  }
+}
+
+// ✅ CORRECT: Extract helpers
+async function process() {
+  const validItems = getValidItems();
+  return processItems(validItems);
+}
+```
+
+### ✅ Pattern 3: No Unused Parameters
+```javascript
+// ❌ WRONG: Unused 'args'
+exports = {
+  handler: function(args) {
+    console.log('Called');  // args never used!
+  }
+}
+
+// ✅ CORRECT: Remove or use underscore
+exports = {
+  handler: function() {
+    console.log('Called');
+  }
+}
+```
+
+### ✅ Pattern 4: Always Generate Icon
+```
+MUST CREATE: app/styles/images/icon.svg
+NEVER SKIP THIS FILE - FDK validation will fail!
+```
+
+---
+
 ## Template 1: Frontend App
 
 **Use Case:** UI-only app with no backend logic
@@ -57,7 +123,7 @@ my-app/
 │   └── styles/
 │       ├── style.css
 │       └── images/
-│           └── icon.svg
+│           └── icon.svg  ← ALWAYS CREATE THIS!
 ├── manifest.json
 └── README.md
 ```
@@ -88,24 +154,23 @@ my-app/
 
 ### app/scripts/app.js
 ```javascript
-let client;
-
-init();
-
-async function init() {
-  client = await app.initialized();
-  client.events.on('app.activated', renderText);
-}
-
-async function renderText() {
-  const textElement = document.getElementById('apptext');
-  const contactData = await client.data.get('contact');
-  const {
-    contact: { name }
-  } = contactData;
-
-  textElement.innerHTML = `Ticket is created by ${name}`;
-}
+// ✅ CORRECT: Proper async scoping (no race conditions)
+(async function() {
+  const client = await app.initialized();
+  
+  client.events.on('app.activated', async () => {
+    await renderText(client);
+  });
+  
+  // ✅ Keep function complexity low (≤ 7)
+  async function renderText(client) {
+    const textElement = document.getElementById('apptext');
+    const contactData = await client.data.get('contact');
+    const { contact: { name } } = contactData;
+    
+    textElement.innerHTML = `Ticket is created by ${name}`;
+  }
+})();
 ```
 
 ### app/index.html
@@ -200,17 +265,32 @@ my-serverless-app/
 
 ### server/server.js
 ```javascript
+// ✅ CORRECT: Only include parameters you actually use
+// ✅ Keep function complexity low (≤ 7)
 exports = {
+  // Uses args - keep parameter
   onTicketCreateHandler: function(args) {
-    console.log('Hello ' + args['data']['requester']['name']);
+    const requesterName = args.data.requester.name;
+    console.log('Hello ' + requesterName);
   },
   
+  // Uses args - keep parameter
   onAppInstallHandler: function(args) {
-    console.info('onAppInstallHandler invoked with following data: \n', args);
+    console.info('onAppInstallHandler invoked', args);
   },
   
-  onAppUninstallHandler: function(args) {
-    console.log('onAppUninstallHandler invoked with following data: \n', args);
+  // Doesn't use args - remove parameter
+  onAppUninstallHandler: function() {
+    console.log('onAppUninstallHandler invoked');
+  }
+};
+
+// ✅ If handler signature REQUIRES parameter but you don't use it:
+// Use underscore prefix to indicate intentionally unused
+exports = {
+  myHandler: function(_args) {
+    // _args indicates intentionally unused
+    console.log('Handler called');
   }
 };
 ```
@@ -349,7 +429,7 @@ async function init() {
   client.events.on('app.activated', onAppActivate);
 }
 
-async function onAppActivate() {
+function onAppActivate() {
   // Use Crayons button event listener
   const btn = document.getElementById('btnFetch');
   btn.addEventListener('fwClick', fetchData);
@@ -738,6 +818,7 @@ ALWAYS:
 
 Before generating any manifest.json, verify:
 
+### Platform 3.0 Structure
 - [ ] `"platform-version": "3.0"` ✅
 - [ ] `"modules"` structure (NOT "product") ✅
 - [ ] At least one product module (even if empty `{}`) ✅
@@ -751,9 +832,39 @@ Before generating any manifest.json, verify:
   - `ticket_sidebar`, `asset_sidebar`, etc. → `modules.<product>.location`
 - [ ] **OAuth config has `integrations` wrapper** ✅
 - [ ] **OAuth request template has `options.oauth` and `access_token` header** ✅
+
+### File Structure (CRITICAL - Common Failures!)
 - [ ] **Complete folder structure generated** ✅
   - Frontend apps: `app/scripts/`, `app/styles/images/`
-  - All apps: `icon.svg`, `style.css` files created
+- [ ] **icon.svg ALWAYS created** ✅ - `app/styles/images/icon.svg`
+- [ ] **style.css created** ✅ - `app/styles/style.css`
+- [ ] **All HTML, JS files created** ✅
+
+### Code Quality (Based on Real Failures!)
+- [ ] **Function complexity ≤ 7** ✅
+  - Break complex functions into helpers
+  - Extract nested logic
+- [ ] **No async variable scoping issues** ✅
+  - Use IIFE pattern: `(async function() { ... })()`
+  - Declare variables in same scope
+- [ ] **No unused parameters** ✅
+  - Remove unused parameters
+  - Or use underscore prefix: `_args`
+- [ ] **Only use `async` when you `await`** ✅
+  - Remove `async` keyword if no `await` inside
+  - Lint error: "Async function has no 'await' expression"
+- [ ] **NEVER use deprecated Request API methods** ✅
+  - ❌ NO `$request.post()`, `.get()`, `.put()`, `.delete()`
+  - ✅ ALWAYS use `$request.invokeTemplate()`
+  - Platform error: "post is no longer supported in Request API"
+- [ ] **Proper error handling** ✅
+  - Use try/catch blocks
+  - Handle API failures gracefully
+
+### Crayons UI (Frontend Only)
+- [ ] **Crayons CDN included** ✅
+- [ ] **Use fw-* components** ✅
+- [ ] **NO plain HTML elements** ✅
 
 If ANY of these fail → REJECT and fix before generating!
 
@@ -869,6 +980,69 @@ Must include:
   }
 }
 ```
+
+---
+
+## Critical Request API Rules
+
+**❌ VALIDATION ERROR: "post is no longer supported in Request API"**
+
+This means you're using deprecated Platform 2.x request methods!
+
+**Platform 2.x Deprecated Methods (NEVER USE):**
+
+❌ **WRONG - Platform 2.x format:**
+```javascript
+// These methods are DEPRECATED and will cause errors!
+$request.post('https://api.example.com/endpoint', options)
+$request.get('https://api.example.com/data', options)
+$request.put('https://api.example.com/update', options)
+$request.delete('https://api.example.com/remove', options)
+```
+
+✅ **CORRECT - Platform 3.0 format:**
+
+**Step 1: Define request template in `config/requests.json`:**
+```json
+{
+  "myApiCall": {
+    "schema": {
+      "method": "POST",
+      "host": "api.example.com",
+      "path": "/endpoint",
+      "headers": {
+        "Authorization": "Bearer {{api_key}}",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+**Step 2: Use in `server/server.js`:**
+```javascript
+exports = {
+  myHandler: async function(args) {
+    try {
+      const response = await $request.invokeTemplate('myApiCall', {
+        context: {},
+        body: JSON.stringify({ data: 'value' })
+      });
+      
+      return { success: true, data: response.response };
+    } catch (error) {
+      console.error('API Error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+};
+```
+
+**Key Points:**
+- ❌ NEVER use `$request.post()`, `.get()`, `.put()`, `.delete()`
+- ✅ ALWAYS use `$request.invokeTemplate('templateName', options)`
+- Define all external API calls in `config/requests.json`
+- Reference templates by name in server code
 
 ---
 

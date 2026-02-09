@@ -24,6 +24,10 @@ Thumbs.db
 *.backup
 *~
 
+# FDK Log Directories
+log/
+**/log/
+
 # Test Outputs
 test-results/
 coverage/
@@ -66,8 +70,21 @@ notes.md
 TODO.md
 *.personal
 
-# Development and Testing (not part of skill release)
+# Testing Environment (local only, never push)
+.test/
+
+# Internal Development Materials (local only, never push)
 .dev/
 
 # Windsurf (internal only)
 .windsurf/
+
+# Internal Infrastructure (NOT part of public skill)
+.telemetry/
+.db/
+.github/
+.aclm/
+.clp/
+
+# Python Virtual Environment
+.venv/

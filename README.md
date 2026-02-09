@@ -1,185 +1,370 @@
 # Freshworks Platform 3.0 Development Skill
 
-A comprehensive development skill for building Freshworks Platform 3.0 applications with strict enforcement of platform rules and best practices.
+An AI-powered development skill for building Freshworks Platform 3.0 marketplace applications.
+---
 
-## Overview
-
-This skill provides specialized guidance for developing apps on Freshworks Platform 3.0. It acts as an enforcement layer, ensuring all code and patterns strictly adhere to Platform 3.0 specifications while rejecting legacy 2.x patterns automatically.
-
-## Features
-
-- ✅ **Strict Platform 3.0 Enforcement** - Rejects legacy 2.x patterns automatically
-- ✅ **Execution Model Awareness** - Understands frontend/backend boundaries
-- ✅ **Error Classification** - Categorizes errors for better debugging
-- ✅ **React Meta Framework Support** - Comprehensive React development guidance
-- ✅ **Production-Ready Patterns** - Bias toward production-ready architecture
-- ✅ **Migration Support** - Platform 2.x to 3.0/3.1 migration guidance
-- ✅ **Security Auditing** - Secure iparams and vulnerability checks
-
-## Installation
-
-### Option 1: Local Installation (For Development)
-
-**Prerequisites:**
-- Cursor IDE installed
-- Node.js (for npx command)
-
-**Steps:**
-
-1. **Clone the repository:**
-   ```bash
-   cd /path/to/your-workspace
-   git clone https://github.com/freshworks-developers/freshworks-platform3.git
-   ```
-
-2. **Install skill locally using npx:**
-   ```bash
-   cd your-freshworks-app
-   npx /path/to/freshworks-platform3
-   ```
-   
-   This will automatically:
-   - ✅ Copy skill files to `.cursor/rules/`
-   - ✅ Copy skill files to `.cursor/skills/freshworks-platform3/`
-   - ✅ Copy agent files to `.agents/skills/freshworks-platform3/`
-   - ✅ Show installation summary
-
-3. **Restart Cursor IDE** to load the skill
-
-4. **Verify installation:**
-   - Open Cursor Settings → Rules
-   - You should see `freshworks-platform3.mdc` listed
-
-**Manual Local Installation:**
-
-If you prefer manual installation:
+## Quick Start
 
 ```bash
-# For Cursor IDE
-cp -r /path/to/freshworks-platform3/.cursor /path/to/your-project/
+# 1. Clone
+git clone https://github.com/freshworks-developers/freshworks-platform3.git
 
-# For other agent frameworks
-cp -r /path/to/freshworks-platform3/.agents /path/to/your-project/
+# 2. Install to your project
+cd your-freshworks-app
+npx /path/to/freshworks-platform3
+
+# 3. Restart Cursor IDE
+
+# 4. Test it
+# Ask: "Create a Freshdesk ticket sidebar app"
 ```
 
-Then restart Cursor IDE.
+---
 
-### Option 2: NPM Installation (When Published)
+## What This Skill Does
 
-> **Note:** This package is not yet published to npm. Use local installation above.
+| Feature | Description |
+|---------|-------------|
+| **Strict Platform 3.0 Enforcement** | Auto-rejects legacy 2.x patterns |
+| **Complete App Templates** | Frontend, Serverless, Hybrid, OAuth |
+| **Crayons UI Components** | 59 documented components |
+| **Telemetry** | Track developer struggles (opt-out available) |
+| **Benchmarking** | Compare against baseline metrics |
+| **State Persistence** | Remember context across IDE restarts |
 
-Once published, you'll be able to install via:
+---
 
-```bash
-# From npm
-npm install @freshworks-developers/freshworks-platform3-skill
-
-# Or use npx directly
-npx @freshworks-developers/freshworks-platform3-skill
-```
-
-### Option 3: For skills.sh
-
-```bash
-# Add from GitHub
-npx skills add https://github.com/freshworks-developers/freshworks-platform3
-```
-
-## Skill Structure
+## Project Structure
 
 ```
 freshworks-platform3/
-├── SKILL.md                    # Main skill (skills.sh format)
-├── skill.yaml                  # Skill metadata
-├── kernel.prompt               # Core prompt
-├── knowledge/                  # Symlink to references/
-├── .cursor/                    # Cursor IDE integration
-│   ├── rules/
-│   │   └── freshworks-platform3.mdc
-│   └── skills/
-│       └── freshworks-platform3/SKILL.md
-├── .agents/                    # Other agent frameworks
-│   └── skills/
-│       └── freshworks-platform3/SKILL.md
-└── references/                 # Reference documentation
-    ├── platform3.rules.md
-    ├── error.taxonomy.json
-    ├── cli.behavior.md
-    ├── react-meta.md
-    ├── fdk/                    # FDK documentation
-    ├── server/                 # Server-side topics
-    ├── migration/              # Migration guides
-    ├── ui/                     # UI components (Crayons)
-    └── use-cases/              # Use case examples
+│
+├── 📄 PUBLIC (GitHub Release)
+│   ├── SKILL.md                    # Main skill definition
+│   ├── skill.yaml                  # Metadata
+│   ├── kernel.prompt               # AI behavior rules
+│   ├── package.json                # NPM package
+│   ├── .cursor/rules/              # Cursor IDE rules
+│   │   ├── freshworks-platform3.mdc
+│   │   ├── app-templates.mdc
+│   │   └── platform3-modules-locations.mdc
+│   ├── .agents/                    # Other agent frameworks
+│   ├── references/                 # Documentation (159+ files)
+│   ├── .telemetry/                 # Usage analytics
+│   ├── .db/                        # State persistence (SQLite)
+│   └── scripts/install.js          # Installation script
+│
+├── 🧪 .test/ (Local Testing - NOT committed)
+│   ├── prompts_analysis/
+│   │   ├── benchmark.py            # Cursor API benchmark
+│   │   ├── input/                  # Test prompts
+│   │   ├── feature_wise/           # Feature-specific tests
+│   │   └── results/                # Benchmark outputs
+│   └── automation/
+│       ├── automate_test.py        # App generation tests
+│       └── use-cases/              # 7 app definitions
+│
+└── 🔧 .dev/ (Internal Development - NOT committed)
+    └── log.md                      # Technical decisions log
 ```
+
+---
+
+## Installation
+
+### For Cursor IDE
+
+```bash
+# Clone repo
+git clone https://github.com/freshworks-developers/freshworks-platform3.git
+
+# Install to your project
+cd your-freshworks-app
+npx /path/to/freshworks-platform3
+
+# Restart Cursor
+```
+
+### For skills.sh
+
+```bash
+npx skills add https://github.com/freshworks-developers/freshworks-platform3
+```
+
+### Manual Installation
+
+```bash
+cp -r /path/to/freshworks-platform3/.cursor /your-project/
+```
+
+---
 
 ## Usage
 
-The skill automatically triggers when working with:
-- Creating new Platform 3.0 apps
-- Debugging Platform 3.0 errors
-- Reviewing code for Platform 3.0 compliance
-- Understanding Platform 3.0 execution model
-- Developing with React Meta Framework
-- Configuring API integrations, OAuth, SMI, scheduled events
-- Working with key-value storage, entity storage, object store
-- Migrating from Platform 2.x to 3.0/3.1
+### Creating Apps
 
-## Capabilities
+Ask the skill:
+- "Create a Freshdesk ticket sidebar app"
+- "Create a Freshservice OAuth app with Jira integration"
+- "Create a serverless app with scheduled events"
 
-| Capability | Description |
-|------------|-------------|
-| **Build** | Generate Platform 3.0 compliant code |
-| **Debug** | Classify errors and identify violations |
-| **Review** | Validate code against Platform 3.0 rules |
-| **Explain** | Clarify Platform 3.0 concepts |
-| **Error-Fix** | Automatically identify and fix errors |
-| **Migrate** | Guide Platform 2.x to 3.0 migrations |
-| **Security-Audit** | Check for security issues |
+### App Types
 
-## Key Principles
+| Type | Use Case |
+|------|----------|
+| **Frontend** | UI-only sidebar apps |
+| **Serverless** | Automation, webhooks, scheduled tasks |
+| **Hybrid** | UI + external API calls |
+| **OAuth** | Third-party integrations |
 
-- Frontend (`app.js`) executes in browser iframe context
-- Backend (`server.js`) executes in Node.js runtime
-- No shared memory between frontend and backend
-- Strict execution boundaries enforced
-- Legacy Platform 2.x patterns rejected automatically
+### Supported Products
 
-## Refusal Logic
+| Product | Modules |
+|---------|---------|
+| Freshdesk | `support_ticket`, `support_contact`, `support_company` |
+| Freshservice | `service_ticket`, `service_asset`, `service_change` |
+| Freshsales | `deal`, `contact`, `account`, `lead` |
+| Freshcaller | `call`, `caller_agent`, `notification` |
+| Freshchat | `chat_conversation`, `chat_user` |
 
-The skill will refuse and respond with "Insufficient platform certainty." when:
-- User mixes Platform 2.x and 3.0 APIs or patterns
-- User asks "guess why" or requests speculation without source
-- User discusses logs without execution context
-- User requests undocumented behavior
-- User asks for workarounds violating execution boundaries
+---
 
-## Knowledge Base
+## Telemetry
 
-The skill includes comprehensive documentation covering:
-- Platform 3.0 execution model and rules
-- Error taxonomy and classification
-- CLI behavior and commands
-- React Meta Framework patterns
-- FDK topics (OAuth, request methods, installation parameters, actions)
-- Server-side patterns (SMI, scheduled events, key-value storage)
-- UI components (Crayons)
-- Migration guides (Platform 2.x → 3.0/3.1)
-- Use case examples
+The skill collects **anonymous, aggregated** usage data to improve:
+- Documentation gaps
+- Error message clarity
+- Skill effectiveness
 
-## Requirements
+### What's Collected (No PII)
 
-- Freshworks Platform 3.0
-- Skills framework compatible environment (e.g., Cursor IDE)
+```json
+{
+  "top_struggles": [
+    {"issue": "OAuth configuration", "pct": 25},
+    {"issue": "Request template errors", "pct": 20}
+  ],
+  "resolution_rate": 0.87
+}
+```
+
+### Opt-Out
+
+```bash
+export FRESHWORKS_TELEMETRY=false
+```
+
+---
+
+## State Persistence (.db/)
+
+The skill uses a **lightweight SQLite database** to remember context across IDE restarts and tool switches.
+
+### What's Tracked
+
+| Category | Data |
+|----------|------|
+| **Project** | Platform version (v2 or v3), default product |
+| **Apps** | Created apps, type, status, module, location |
+| **Files** | Generated files with checksums |
+| **Errors** | Encountered errors, fixes applied, patterns |
+| **Sessions** | IDE type, current task, conversation context |
+| **Validations** | FDK validation history |
+
+### Cross-IDE Continuity
+
+Switch from Cursor to Claude Desktop? The skill remembers:
+- What app you were building
+- What errors you fixed
+- What files were generated
+- Your preferences
+
+### Database Location
+
+```
+.db/
+├── schema.sql      # Database schema
+├── db.js           # JavaScript API
+├── package.json    # Dependencies
+└── skill.db        # SQLite database (created on first use)
+```
+
+### API Example
+
+```javascript
+const { getDatabase } = require('./.db/db');
+const db = getDatabase();
+
+// Get project state (for context restoration)
+const state = db.getProjectState('/path/to/workspace');
+console.log(state.currentApp);      // Current app being built
+console.log(state.errorPatterns);   // Most common errors
+
+// Track a new error
+db.recordError(appId, {
+  type: 'validation',
+  code: 'MISSING_ICON',
+  message: 'Icon not found',
+  file: 'manifest.json'
+});
+
+// Check if error was fixed before
+const fix = db.wasErrorPreviouslyFixed('MISSING_ICON');
+if (fix) console.log(`Previously fixed via: ${fix.fix_method}`);
+```
+
+### Opt-Out
+
+Delete `.db/skill.db` to clear state. The skill works without the database (stateless mode).
+
+---
+
+## Testing & Benchmarking
+
+### Setup (One-time)
+
+```bash
+cd .test
+python3 -m venv .venv
+source .venv/bin/activate
+pip install openpyxl requests
+```
+
+### Run Benchmarks
+
+```bash
+cd .test
+source .venv/bin/activate
+export CURSOR_API_KEY='key_xxx...'  # From cursor.com/dashboard
+
+# List available features
+python3 prompts_analysis/benchmark.py --list-features
+
+# Run benchmark
+python3 prompts_analysis/benchmark.py --limit 10
+python3 prompts_analysis/benchmark.py --feature oauth --limit 20
+```
+
+### Test App Generation
+
+```bash
+cd .test/automation
+python3 automate_test.py APP001
+```
+
+### Available Test Features
+
+| Feature | Prompts |
+|---------|---------|
+| crayons_and_fe | 132 |
+| request_method_oAuth | 81 |
+| interface_method | 79 |
+| iparams | 74 |
+| key_value_store | 65 |
+| events_method | 64 |
+| custom_iparams | 50 |
+| smi | 41 |
+| product_events | 37 |
+
+---
+
+## Development
+
+### Internal Development (.dev/)
+
+```bash
+# View technical decisions
+cat .dev/log.md
+```
+
+Contains:
+- TDR (Technical Decision Records)
+- Architecture overview
+- Metrics & KPIs
+- Change history
+
+### Adding New Rules
+
+1. Create `.cursor/rules/your-rule.mdc`
+2. Add frontmatter with `description` and `globs`
+3. Test with Cursor IDE
+4. Update `.dev/log.md`
+
+---
+
+## Key Patterns
+
+### Platform 3.0 Manifest
+
+```json
+{
+  "platform-version": "3.0",
+  "modules": {
+    "common": { "requests": {} },
+    "support_ticket": {
+      "location": {
+        "ticket_sidebar": {
+          "url": "index.html",
+          "icon": "styles/images/icon.svg"
+        }
+      }
+    }
+  },
+  "engines": { "node": "18.20.8", "fdk": "9.7.4" }
+}
+```
+
+### Request Templates
+
+```javascript
+// ✅ CORRECT (Platform 3.0)
+await $request.invokeTemplate('myApi', { body: JSON.stringify(data) });
+
+// ❌ WRONG (Deprecated)
+await $request.post('https://api.example.com', options);
+```
+
+### Crayons UI
+
+```html
+<!-- ✅ CORRECT -->
+<fw-button color="primary">Submit</fw-button>
+
+<!-- ❌ WRONG -->
+<button>Submit</button>
+```
+
+---
+
+## Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| "Invalid location(s)" | Move location to product module, not `common` |
+| "post is no longer supported" | Use `$request.invokeTemplate()` |
+| "OAuth config must have 'integrations'" | Add `{ "integrations": { ... } }` wrapper |
+| "Missing icon.svg" | Create `app/styles/images/icon.svg` |
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Follow Platform 3.0 standards
+4. Test with `fdk validate`
+5. Submit pull request
+
+---
 
 ## License
 
 MIT
 
-## Contributing
-
-Contributions are welcome! Please ensure any changes maintain Platform 3.0 compliance and follow the established patterns.
-
 ---
 
-**Note:** This skill follows the Skills framework structure. The `SKILL.md` file contains the core skill definition, while `references/` (aliased as `knowledge/`) contains reference documentation loaded as needed.
+## Links
+
+- [Freshworks Developer Docs](https://developers.freshworks.com)
+- [Freshworks Community](https://community.freshworks.com)
+- [GitHub Issues](https://github.com/freshworks-developers/freshworks-platform3/issues)
