@@ -8,12 +8,14 @@ alwaysApply: true
 **CRITICAL ENFORCEMENT:**
 - ❌ NEVER use `"whitelisted-domains"` - It's Platform 2.3 syntax, deprecated and invalid in 3.0
 - ❌ NEVER use `"product"` structure - Use `"modules"` in Platform 3.0
-- ❌ NEVER use plain HTML buttons/inputs - Use Crayons components ONLY
+- ❌ NEVER use plain HTML buttons/inputs/selects/textarea - Use Crayons components ONLY
+- ❌ NEVER use `<button>`, `<input>`, `<select>`, `<textarea>` - These will cause validation failures
 - ✅ ALWAYS start with skeleton templates below
 - ✅ ALWAYS use `"modules"` structure
 - ✅ ALWAYS include `"engines"` block
-- ✅ ALWAYS use Crayons components for UI (fw-button, fw-input, fw-select, etc.)
-- ✅ ALWAYS include Crayons CDN in HTML files
+- ✅ ALWAYS use Crayons components for UI (fw-button, fw-input, fw-select, fw-textarea, etc.)
+- ✅ ALWAYS include Crayons CDN in ALL HTML files (even if no UI components yet)
+- ✅ ALWAYS validate: If HTML file exists, it MUST have Crayons CDN and use Crayons components
 
 ---
 
@@ -180,7 +182,105 @@ exports = {
 
 **CRITICAL:** FDK's parser fails if functions are defined BEFORE the exports block!
 
-### ✅ Pattern 4: Always Generate Icon
+### ✅ Pattern 5: Async Functions Must Use Await
+```javascript
+// ❌ WRONG: Async function without await (lint error)
+exports = {
+  syncAllContacts: async function(args) {
+    return $request.invokeTemplate('apiCall', {});  // Missing await!
+  }
+};
+
+// ✅ CORRECT Option 1: Add await
+exports = {
+  syncAllContacts: async function(args) {
+    return await $request.invokeTemplate('apiCall', {});
+  }
+};
+
+// ✅ CORRECT Option 2: Remove async if no await needed
+exports = {
+  syncAllContacts: function(args) {
+    return $request.invokeTemplate('apiCall', {});
+  }
+};
+```
+
+**CRITICAL:** If a function is marked `async`, it MUST contain at least one `await` expression, or remove `async` keyword.
+
+### ✅ Pattern 6: Scheduled Events Cannot Be Declared in Manifest
+```json
+// ❌ WRONG: Scheduled events in manifest (Platform error!)
+{
+  "modules": {
+    "common": {
+      "events": {
+        "onScheduledSync": {  // ❌ INVALID!
+          "handler": "syncHandler"
+        }
+      }
+    }
+  }
+}
+```
+
+```javascript
+// ✅ CORRECT: Scheduled events are created dynamically, NOT in manifest
+exports = {
+  onAppInstallHandler: async function(args) {
+    // Create scheduled event dynamically
+    await $schedule.create({
+      name: "dailySync",
+      schedule_at: new Date(Date.now() + 86400000).toISOString(),
+      time_unit: "days",
+      frequency: 1,
+      data: { syncType: "full" }
+    });
+  },
+  
+  // Handler for scheduled event (called when schedule fires)
+  scheduledSyncHandler: async function(payload) {
+    // This handler is called by the platform when schedule fires
+    // It's NOT declared in manifest - platform calls it automatically
+    await syncContacts(payload.data);
+  }
+};
+```
+
+**CRITICAL:** Scheduled events are created at runtime using `$schedule.create()`. They CANNOT be declared in `manifest.json` events section. Only product events (onTicketCreate, etc.) and app setup events (onAppInstall, onAppUninstall) can be declared in manifest.
+
+### ✅ Pattern 7: Avoid Unreachable Code
+```javascript
+// ❌ WRONG: Code after return statement
+exports = {
+  myHandler: function(args) {
+    if (!args.data) {
+      return { error: 'No data' };
+    }
+    
+    // ❌ UNREACHABLE: This code never executes if args.data is falsy
+    const result = processData(args.data);
+    return result;
+  }
+};
+
+// ✅ CORRECT: Proper control flow
+exports = {
+  myHandler: function(args) {
+    if (!args.data) {
+      return { error: 'No data' };
+    }
+    
+    // ✅ REACHABLE: Only executes if args.data exists
+    const result = processData(args.data);
+    return result;
+  }
+};
+```
+
+**CRITICAL:** Ensure all code paths are reachable. Remove code after return statements or restructure logic.
+
+### ✅ Pattern 8: Always Generate Icon
 ```
 MUST CREATE: app/styles/images/icon.svg
 NEVER SKIP THIS FILE - FDK validation will fail!
@@ -930,12 +1030,25 @@ Before generating any manifest.json, verify:
 - [ ] **No async variable scoping issues** ✅
   - Use IIFE pattern: `(async function() { ... })()`
   - Declare variables in same scope
+  - Warning: "'client' declared and assigned in different scopes"
 - [ ] **No unused parameters** ✅
   - Remove unused parameters
   - Or use underscore prefix: `_args`
 - [ ] **Only use `async` when you `await`** ✅
   - Remove `async` keyword if no `await` inside
   - Lint error: "Async function has no 'await' expression"
+- [ ] **No unreachable code** ✅
+  - Remove code after return statements
+  - Restructure control flow if needed
+  - Lint error: "Unreachable code"
+- [ ] **Scheduled events NOT in manifest** ✅
+  - ❌ NEVER declare `onScheduled*` events in manifest
+  - ✅ Create scheduled events dynamically with `$schedule.create()`
+  - Platform error: "Invalid event: 'onScheduledSync' for module: common"
+- [ ] **Helper functions AFTER exports** ✅
+  - ❌ NEVER define functions BEFORE exports block
+  - ✅ Define helpers INSIDE exports, AFTER exports, or inline
+  - FDK parser error: "Error while parsing file containing serverless functions"
 - [ ] **NEVER use deprecated Request API methods** ✅
   - ❌ NO `$request.post()`, `.get()`, `.put()`, `.delete()`
   - ✅ ALWAYS use `$request.invokeTemplate()`
@@ -944,10 +1057,24 @@ Before generating any manifest.json, verify:
   - Use try/catch blocks
   - Handle API failures gracefully
 
-### Crayons UI (Frontend Only)
-- [ ] **Crayons CDN included** ✅
-- [ ] **Use fw-* components** ✅
-- [ ] **NO plain HTML elements** ✅
+### Crayons UI (Frontend Only - STRICT ENFORCEMENT!)
+- [ ] **Crayons CDN included in ALL HTML files** ✅
+  - Must include BOTH script tags (ESM and nomodule)
+  - Required even if no UI components yet
+- [ ] **NO plain HTML form elements** ✅
+  - ❌ NO `<button>` - Use `<fw-button>`
+  - ❌ NO `<input>` - Use `<fw-input>`
+  - ❌ NO `<select>` - Use `<fw-select>` with `<fw-select-option>`
+  - ❌ NO `<textarea>` - Use `<fw-textarea>`
+  - ❌ NO `<label>` - Use `<fw-label>` or `label` attribute on components
+- [ ] **Use Crayons components ONLY** ✅
+  - All interactive elements must be Crayons components
+  - All form inputs must be Crayons components
+  - All buttons must be Crayons components
+- [ ] **Crayons event listeners** ✅
+  - Use `fwClick` for buttons (not `click`)
+  - Use `fwInput` for inputs (not `input`)
+  - Use `fwChange` for selects (not `change`)
 
 If ANY of these fail → REJECT and fix before generating!
 

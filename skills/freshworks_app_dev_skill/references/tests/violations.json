@@ -216,6 +216,102 @@
         },
         "critical": "FDK's parser fails if functions are defined BEFORE the exports block!"
       }
+    },
+    {
+      "id": "violation_012",
+      "name": "Async function without await",
+      "violation": {
+        "code": "exports = {\n  syncAllContacts: async function(args) {\n    return $request.invokeTemplate('apiCall', {});\n  }\n};",
+        "error": "Async method 'syncAllContacts' has no 'await' expression"
+      },
+      "fix": {
+        "option_1": {
+          "code": "exports = {\n  syncAllContacts: async function(args) {\n    return await $request.invokeTemplate('apiCall', {});\n  }\n};",
+          "explanation": "Add await keyword before async operation"
+        },
+        "option_2": {
+          "code": "exports = {\n  syncAllContacts: function(args) {\n    return $request.invokeTemplate('apiCall', {});\n  }\n};",
+          "explanation": "Remove async keyword if no await needed"
+        },
+        "critical": "If function is marked async, it MUST contain at least one await expression"
+      }
+    },
+    {
+      "id": "violation_013",
+      "name": "Scheduled event declared in manifest",
+      "violation": {
+        "manifest": {
+          "modules": {
+            "common": {
+              "events": {
+                "onScheduledSync": {
+                  "handler": "syncHandler"
+                }
+              }
+            }
+          }
+        },
+        "error": "Invalid event: 'onScheduledSync' for module: common"
+      },
+      "fix": {
+        "manifest": {
+          "modules": {
+            "common": {
+              "events": {}
+            }
+          }
+        },
+        "code": "exports = {\n  onAppInstallHandler: async function(args) {\n    await $schedule.create({\n      name: 'dailySync',\n      schedule_at: new Date(Date.now() + 86400000).toISOString(),\n      time_unit: 'days',\n      frequency: 1,\n      data: { syncType: 'full' }\n    });\n  },\n  scheduledSyncHandler: async function(payload) {\n    // Handler called automatically by platform\n    await syncContacts(payload.data);\n  }\n};",
+        "explanation": "Scheduled events are created dynamically with $schedule.create(), NOT declared in manifest"
+      }
+    },
+    {
+      "id": "violation_014",
+      "name": "Unreachable code after return",
+      "violation": {
+        "code": "exports = {\n  myHandler: function(args) {\n    if (!args.data) {\n      return { error: 'No data' };\n    }\n    const result = processData(args.data);\n    return result;\n  }\n};",
+        "error": "Unreachable code"
+      },
+      "fix": {
+        "code": "exports = {\n  myHandler: function(args) {\n    if (!args.data) {\n      return { error: 'No data' };\n    }\n    const result = processData(args.data);\n    return result;\n  }\n};",
+        "explanation": "Ensure all code paths are reachable. Remove code after return statements or restructure logic."
+      }
+    },
+    {
+      "id": "violation_015",
+      "name": "Plain HTML elements instead of Crayons",
+      "violation": {
+        "html": "<button>Click Me</button>\n<input type=\"text\" />\n<select><option>Item</option></select>\n<textarea></textarea>",
+        "error": "Plain HTML form elements not allowed - must use Crayons components"
+      },
+      "fix": {
+        "html": "<fw-button color=\"primary\">Click Me</fw-button>\n<fw-input label=\"Name\" placeholder=\"Enter name\"></fw-input>\n<fw-select label=\"Choose\"><fw-select-option value=\"1\">Item</fw-select-option></fw-select>\n<fw-textarea label=\"Description\"></fw-textarea>",
+        "explanation": "ALL form elements MUST use Crayons components (fw-button, fw-input, fw-select, fw-textarea). Plain HTML elements will cause validation failures."
+      }
+    },
+    {
+      "id": "violation_016",
+      "name": "Missing Crayons CDN in HTML",
+      "violation": {
+        "html": "<!DOCTYPE html>\n<html>\n<head><title>App</title></head>\n<body><fw-button>Click</fw-button></body>\n</html>",
+        "error": "Crayons components used but CDN not included"
+      },
+      "fix": {
+        "html": "<!DOCTYPE html>\n<html>\n<head><title>App</title></head>\n<body><fw-button>Click</fw-button></body>\n<script async type=\"module\" src=\"https://cdn.jsdelivr.net/npm/@freshworks/crayons@v4/dist/crayons/crayons.esm.js\"></script>\n<script async nomodule src=\"https://cdn.jsdelivr.net/npm/@freshworks/crayons@v4/dist/crayons/crayons.js\"></script>\n</html>",
+        "explanation": "ALL HTML files MUST include Crayons CDN (both ESM and nomodule scripts) even if no Crayons components are used yet"
+      }
+    },
+    {
+      "id": "violation_017",
+      "name": "Client declared in different scopes",
+      "violation": {
+        "code": "let client;\nasync function init() {\n  client = await app.initialized();\n}\ninit();\n// Use client here - race condition!",
+        "error": "'client' declared and assigned in different scopes. Possible asynchronous race condition"
+      },
+      "fix": {
+        "code": "(async function() {\n  const client = await app.initialized();\n  // Use client here safely\n  client.events.on('app.activated', () => {\n    // App logic\n  });\n})();",
+        "explanation": "Use IIFE pattern to keep client in same scope. Prevents race conditions."
+      }
     }
   ]
 }
