@@ -66,6 +66,30 @@ Never generate these:
 
 ### Step 1: Determine App Type
 
+**CRITICAL: When to include frontend?**
+
+**ALWAYS include frontend (Hybrid or Frontend-only) when:**
+- ✅ User needs to **view, configure, or interact** with the app
+- ✅ User needs to **see status, logs, or sync results**
+- ✅ User needs to **manually trigger actions** (buttons, forms)
+- ✅ User needs to **configure settings beyond iparams**
+- ✅ App provides **dashboard, reports, or visualizations**
+- ✅ User mentions "UI", "interface", "page", "view", "dashboard", "panel"
+- ✅ App needs a **placement** (ticket_sidebar, full_page_app, etc.)
+
+**Use serverless only when:**
+- ❌ Pure automation with **zero user interaction**
+- ❌ Background sync that **never needs monitoring**
+- ❌ User explicitly says "no UI needed" or "background only"
+
+**Examples:**
+- "Zapier contact sync" → ✅ Hybrid (user needs to see sync status, trigger manual sync)
+- "GitHub issue sync" → ✅ Hybrid (user needs to view linked issues, create links)
+- "Send webhook on ticket close" → ❌ Serverless (pure automation, no interaction)
+- "Scheduled backup" → ❌ Serverless (background task, no monitoring)
+
+**Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
+
 Ask yourself:
 - Does it need UI? → Frontend or Hybrid
 - Does it need backend events? → Serverless or Hybrid

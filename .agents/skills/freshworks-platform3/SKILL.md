@@ -22,6 +22,31 @@ Use this skill when:
 - Working with scheduled events, key-value storage
 - Migrating from Platform 2.x to 3.0
 
+## Critical App Type Decision
+
+**When to include frontend (Hybrid or Frontend-only)?**
+
+**ALWAYS include frontend when:**
+- ✅ User needs to **view, configure, or interact** with the app
+- ✅ User needs to **see status, logs, or sync results**
+- ✅ User needs to **manually trigger actions** (buttons, forms)
+- ✅ User needs to **configure settings beyond iparams**
+- ✅ App provides **dashboard, reports, or visualizations**
+- ✅ User mentions "UI", "interface", "page", "view", "dashboard", "panel"
+- ✅ App needs a **placement** (ticket_sidebar, full_page_app, etc.)
+
+**Use serverless only when:**
+- ❌ Pure automation with **zero user interaction**
+- ❌ Background sync that **never needs monitoring**
+- ❌ User explicitly says "no UI needed" or "background only"
+
+**Examples:**
+- "Zapier contact sync" → ✅ Hybrid (user needs to see sync status, trigger manual sync)
+- "GitHub issue sync" → ✅ Hybrid (user needs to view linked issues, create links)
+- "Send webhook on ticket close" → ❌ Serverless (pure automation, no interaction)
+
+**Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
+
 ## Core Principles
 
 ### Execution Model

@@ -43,6 +43,39 @@ When user says "Freshdesk app" or "Freshservice app":
 
 ---
 
+## When to Include Frontend (CRITICAL DECISION POINT)
+
+**ALWAYS include frontend (Template 1 or 3) when:**
+- ✅ User needs to **view, configure, or interact** with the app
+- ✅ User needs to **see status, logs, or sync results**
+- ✅ User needs to **manually trigger actions** (buttons, forms)
+- ✅ User needs to **configure settings beyond iparams** (dynamic options, toggles)
+- ✅ App provides **dashboard, reports, or visualizations**
+- ✅ User mentions "UI", "interface", "page", "view", "dashboard", "panel", "sidebar"
+- ✅ App needs a **placement** (ticket_sidebar, full_page_app, etc.)
+
+**Use serverless only (Template 2) when:**
+- ❌ Pure automation with **zero user interaction**
+- ❌ Background sync that **never needs monitoring**
+- ❌ Webhook receiver with **no status display**
+- ❌ Scheduled tasks with **no manual controls**
+- ❌ User explicitly says "no UI needed" or "background only"
+
+**Examples:**
+
+| Use Case | Frontend? | Why? |
+|----------|-----------|------|
+| "Zapier contact sync with webhook" | ✅ YES (Hybrid) | User needs to see sync status, manually trigger sync, configure which events to sync |
+| "Auto-sync contacts to Zapier on create" | ✅ YES (Hybrid) | User needs to monitor sync status, see errors, manually resync failed contacts |
+| "Send webhook on ticket close" | ❌ NO (Serverless) | Pure automation, no user interaction needed |
+| "Scheduled backup every night" | ❌ NO (Serverless) | Background task, no monitoring needed |
+| "GitHub issue sync" | ✅ YES (Hybrid) | User needs to see linked issues, manually create links, view sync status |
+| "Slack notification on ticket create" | ❌ NO (Serverless) | Pure notification, no user interaction |
+
+**Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
+
+---
+
 ## Code Quality Patterns (ALWAYS ENFORCE)
 
 **These patterns prevent common FDK validation failures:**
