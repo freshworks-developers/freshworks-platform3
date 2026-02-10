@@ -1,25 +1,19 @@
 # Freshworks Platform 3.0 Development Skill
 
 An AI-powered development skill for building Freshworks Platform 3.0 marketplace applications.
----
 
 ## Quick Start
 
 ```bash
-# 1. Clone
-git clone https://github.com/freshworks-developers/freshworks-platform3.git
+# Install from GitHub
+npx skills add https://github.com/freshworks-developers/freshworks-platform3
 
-# 2. Install to your project
+# Or install from local path
 cd your-freshworks-app
 npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 
-# 3. Restart Cursor IDE
-
-# 4. Test it
-# Ask: "Create a Freshdesk ticket sidebar app"
+# Restart Cursor IDE
 ```
-
----
 
 ## What This Skill Does
 
@@ -28,55 +22,6 @@ npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 | **Strict Platform 3.0 Enforcement** | Auto-rejects legacy 2.x patterns |
 | **Complete App Templates** | Frontend, Serverless, Hybrid, OAuth |
 | **Crayons UI Components** | 59 documented components |
-| **Telemetry** | Track developer struggles (opt-out available) |
-| **Benchmarking** | Compare against baseline metrics |
-| **State Persistence** | Remember context across IDE restarts |
-
----
-
-## Project Structure
-
-```
-freshworks-platform3/
-│
-├── 📦 skills/
-│   └── freshworks_app_dev_skill/    # Skills.sh compliant structure
-│       ├── SKILL.md                 # Required: Skill definition with YAML frontmatter
-│       ├── .cursor/rules/           # Rules (installed to user's project)
-│       ├── scripts/install.js       # Installation automation
-│       ├── references/              # Progressive disclosure docs (144 files)
-│       │   ├── api/                 # API documentation
-│       │   ├── architecture/        # Platform 3.0 architecture
-│       │   ├── cli/                 # FDK CLI docs
-│       │   ├── errors/              # Error classification
-│       │   ├── manifest/            # Manifest structure
-│       │   ├── runtime/             # Runtime execution
-│       │   ├── tests/               # Validation patterns (golden/refusal/violations)
-│       │   └── ui/                  # Crayons components
-│       └── assets/                  # Output resources (34 files)
-│           └── templates/           # App scaffolds (frontend/serverless)
-│
-├── 🧪 .test/
-│   ├── automation/
-│   │   └── usecase-to-app/          # Automated testing framework
-│   │       ├── usecases.json        # App prompts (no hints)
-│   │       ├── criteria.json        # Validation criteria
-│   │       ├── test_steps.json      # Testing steps
-│   │       ├── automate_test.py     # Generation + validation
-│   │       ├── run_tests.py         # Validation only
-│   │       ├── setup_demo.sh        # Demo environment setup
-│   │       └── validate_on_enter.sh # Interactive validation
-│   └── prompts_analysis/
-│       └── benchmark.py             # Performance benchmarking
-│
-└── 🔧 Legacy files (root level - to be cleaned up)
-    ├── references/                  # Consolidated into skills/freshworks_app_dev_skill/references/
-    ├── SKILL.md                     # Moved to skills/
-    ├── skill.yaml                   # Removed (not needed for skills.sh)
-    └── kernel.prompt                # Removed (not part of skills.sh anatomy)
-```
-
----
 
 ## Installation
 
@@ -102,10 +47,8 @@ npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 ### Manual Installation
 
 ```bash
-cp -r /path/to/freshworks-platform3/.cursor /your-project/
+cp -r /path/to/freshworks-platform3/skills/freshworks_app_dev_skill/.cursor /your-project/
 ```
-
----
 
 ## Usage
 
@@ -134,171 +77,6 @@ Ask the skill:
 | Freshsales | `deal`, `contact`, `account`, `lead` |
 | Freshcaller | `call`, `caller_agent`, `notification` |
 | Freshchat | `chat_conversation`, `chat_user` |
-
----
-
-## Telemetry
-
-The skill collects **anonymous, aggregated** usage data to improve:
-- Documentation gaps
-- Error message clarity
-- Skill effectiveness
-
-### What's Collected (No PII)
-
-```json
-{
-  "top_struggles": [
-    {"issue": "OAuth configuration", "pct": 25},
-    {"issue": "Request template errors", "pct": 20}
-  ],
-  "resolution_rate": 0.87
-}
-```
-
-### Opt-Out
-
-```bash
-export FRESHWORKS_TELEMETRY=false
-```
-
----
-
-## State Persistence (.db/)
-
-The skill uses a **lightweight SQLite database** to remember context across IDE restarts and tool switches.
-
-### What's Tracked
-
-| Category | Data |
-|----------|------|
-| **Project** | Platform version (v2 or v3), default product |
-| **Apps** | Created apps, type, status, module, location |
-| **Files** | Generated files with checksums |
-| **Errors** | Encountered errors, fixes applied, patterns |
-| **Sessions** | IDE type, current task, conversation context |
-| **Validations** | FDK validation history |
-
-### Cross-IDE Continuity
-
-Switch from Cursor to Claude Desktop? The skill remembers:
-- What app you were building
-- What errors you fixed
-- What files were generated
-- Your preferences
-
-### Database Location
-
-```
-.db/
-├── schema.sql      # Database schema
-├── db.js           # JavaScript API
-├── package.json    # Dependencies
-└── skill.db        # SQLite database (created on first use)
-```
-
-### API Example
-
-```javascript
-const { getDatabase } = require('./.db/db');
-const db = getDatabase();
-
-// Get project state (for context restoration)
-const state = db.getProjectState('/path/to/workspace');
-console.log(state.currentApp);      // Current app being built
-console.log(state.errorPatterns);   // Most common errors
-
-// Track a new error
-db.recordError(appId, {
-  type: 'validation',
-  code: 'MISSING_ICON',
-  message: 'Icon not found',
-  file: 'manifest.json'
-});
-
-// Check if error was fixed before
-const fix = db.wasErrorPreviouslyFixed('MISSING_ICON');
-if (fix) console.log(`Previously fixed via: ${fix.fix_method}`);
-```
-
-### Opt-Out
-
-Delete `.db/skill.db` to clear state. The skill works without the database (stateless mode).
-
----
-
-## Testing & Benchmarking
-
-### Setup (One-time)
-
-```bash
-cd .test
-python3 -m venv .venv
-source .venv/bin/activate
-pip install openpyxl requests
-```
-
-### Run Benchmarks
-
-```bash
-cd .test
-source .venv/bin/activate
-export CURSOR_API_KEY='key_xxx...'  # From cursor.com/dashboard
-
-# List available features
-python3 prompts_analysis/benchmark.py --list-features
-
-# Run benchmark
-python3 prompts_analysis/benchmark.py --limit 10
-python3 prompts_analysis/benchmark.py --feature oauth --limit 20
-```
-
-### Test App Generation
-
-```bash
-cd .test/automation
-python3 automate_test.py APP001
-```
-
-### Available Test Features
-
-| Feature | Prompts |
-|---------|---------|
-| crayons_and_fe | 132 |
-| request_method_oAuth | 81 |
-| interface_method | 79 |
-| iparams | 74 |
-| key_value_store | 65 |
-| events_method | 64 |
-| custom_iparams | 50 |
-| smi | 41 |
-| product_events | 37 |
-
----
-
-## Development
-
-### Internal Development (.dev/)
-
-```bash
-# View technical decisions
-cat .dev/log.md
-```
-
-Contains:
-- TDR (Technical Decision Records)
-- Architecture overview
-- Metrics & KPIs
-- Change history
-
-### Adding New Rules
-
-1. Create `.cursor/rules/your-rule.mdc`
-2. Add frontmatter with `description` and `globs`
-3. Test with Cursor IDE
-4. Update `.dev/log.md`
-
----
 
 ## Key Patterns
 
@@ -342,8 +120,6 @@ await $request.post('https://api.example.com', options);
 <button>Submit</button>
 ```
 
----
-
 ## Troubleshooting
 
 | Error | Solution |
@@ -353,8 +129,6 @@ await $request.post('https://api.example.com', options);
 | "OAuth config must have 'integrations'" | Add `{ "integrations": { ... } }` wrapper |
 | "Missing icon.svg" | Create `app/styles/images/icon.svg` |
 
----
-
 ## Contributing
 
 1. Fork the repository
@@ -363,13 +137,9 @@ await $request.post('https://api.example.com', options);
 4. Test with `fdk validate`
 5. Submit pull request
 
----
-
 ## License
 
 MIT
-
----
 
 ## Links
 
