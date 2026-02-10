@@ -259,12 +259,16 @@ my-app/
 ```
 my-serverless-app/
 ├── server/
-│   └── server.js
+│   └── server.js           # Can also be in root as server.js
 ├── config/
 │   └── iparams.json
 ├── manifest.json
 └── README.md
 ```
+
+**Note:** `server.js` can be located in either:
+- `server/server.js` (recommended for organization)
+- `server.js` (root directory, also valid)
 
 ### manifest.json (CORRECT PLATFORM 3.0)
 ```json
