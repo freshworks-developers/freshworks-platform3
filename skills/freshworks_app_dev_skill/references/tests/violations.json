@@ -192,6 +192,30 @@
         },
         "explanation": "Always include at least one product module (even if empty)"
       }
+    },
+    {
+      "id": "violation_011",
+      "name": "Helper function before exports block",
+      "violation": {
+        "code": "function parseUrl(url) {\n  return new URL(url);\n}\n\nexports = {\n  myHandler: function(args) {\n    const parsed = parseUrl(args.url);\n  }\n};",
+        "error": "Error while parsing file containing serverless functions. Please use the exports section as recommended in the Serverless Apps section"
+      },
+      "fix": {
+        "approach": "Move helper functions AFTER exports block, or inside exports, or inline",
+        "option_1": {
+          "code": "exports = {\n  parseUrl: function(url) {\n    return new URL(url);\n  },\n  myHandler: function(args) {\n    const parsed = this.parseUrl(args.url);\n  }\n};",
+          "explanation": "Helper function INSIDE exports (use this.helperName)"
+        },
+        "option_2": {
+          "code": "exports = {\n  myHandler: function(args) {\n    const parsed = parseUrl(args.url);\n  }\n};\n\nfunction parseUrl(url) {\n  return new URL(url);\n}",
+          "explanation": "Helper function AFTER exports block"
+        },
+        "option_3": {
+          "code": "exports = {\n  myHandler: function(args) {\n    const parseUrl = (url) => new URL(url);\n    const parsed = parseUrl(args.url);\n  }\n};",
+          "explanation": "Inline helper function within handler"
+        },
+        "critical": "FDK's parser fails if functions are defined BEFORE the exports block!"
+      }
     }
   ]
 }

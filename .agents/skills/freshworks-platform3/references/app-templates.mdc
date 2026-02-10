@@ -101,6 +101,52 @@ exports = {
 }
 ```
 
+### ✅ Pattern 4: Helper Functions in Server.js
+```javascript
+// ❌ WRONG: Helper function BEFORE exports (FDK parser error!)
+function parseUrl(url) {
+  return new URL(url);
+}
+
+exports = {
+  myHandler: function(args) {
+    const parsed = parseUrl(args.url);
+  }
+};
+
+// ✅ CORRECT Option 1: Helper function INSIDE exports
+exports = {
+  parseUrl: function(url) {
+    return new URL(url);
+  },
+  
+  myHandler: function(args) {
+    const parsed = this.parseUrl(args.url);
+  }
+};
+
+// ✅ CORRECT Option 2: Helper function AFTER exports
+exports = {
+  myHandler: function(args) {
+    const parsed = parseUrl(args.url);
+  }
+};
+
+function parseUrl(url) {
+  return new URL(url);
+}
+
+// ✅ CORRECT Option 3: Inline helper (for simple logic)
+exports = {
+  myHandler: function(args) {
+    const parseUrl = (url) => new URL(url);
+    const parsed = parseUrl(args.url);
+  }
+};
+```
+
+**CRITICAL:** FDK's parser fails if functions are defined BEFORE the exports block!
+
 ### ✅ Pattern 4: Always Generate Icon
 ```
 MUST CREATE: app/styles/images/icon.svg
