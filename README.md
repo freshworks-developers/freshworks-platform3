@@ -11,7 +11,7 @@ git clone https://github.com/freshworks-developers/freshworks-platform3.git
 
 # 2. Install to your project
 cd your-freshworks-app
-npx /path/to/freshworks-platform3
+npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 
 # 3. Restart Cursor IDE
 
@@ -39,40 +39,54 @@ npx /path/to/freshworks-platform3
 ```
 freshworks-platform3/
 │
-├── 📄 PUBLIC (GitHub Release)
-│   ├── SKILL.md                    # Main skill definition
-│   ├── skill.yaml                  # Metadata
-│   ├── kernel.prompt               # AI behavior rules
-│   ├── package.json                # NPM package
-│   ├── .cursor/rules/              # Cursor IDE rules
-│   │   ├── freshworks-platform3.mdc
-│   │   ├── app-templates.mdc
-│   │   └── platform3-modules-locations.mdc
-│   ├── .agents/                    # Other agent frameworks
-│   ├── references/                 # Documentation (159+ files)
-│   ├── .telemetry/                 # Usage analytics
-│   ├── .db/                        # State persistence (SQLite)
-│   └── scripts/install.js          # Installation script
+├── 📦 skills/
+│   └── freshworks_app_dev_skill/    # Skills.sh compliant structure
+│       ├── SKILL.md                 # Required: Skill definition with YAML frontmatter
+│       ├── .cursor/rules/           # Rules (installed to user's project)
+│       ├── scripts/install.js       # Installation automation
+│       ├── references/              # Progressive disclosure docs (144 files)
+│       │   ├── api/                 # API documentation
+│       │   ├── architecture/        # Platform 3.0 architecture
+│       │   ├── cli/                 # FDK CLI docs
+│       │   ├── errors/              # Error classification
+│       │   ├── manifest/            # Manifest structure
+│       │   ├── runtime/             # Runtime execution
+│       │   ├── tests/               # Validation patterns (golden/refusal/violations)
+│       │   └── ui/                  # Crayons components
+│       └── assets/                  # Output resources (34 files)
+│           └── templates/           # App scaffolds (frontend/serverless)
 │
-├── 🧪 .test/ (Local Testing - NOT committed)
-│   ├── prompts_analysis/
-│   │   ├── benchmark.py            # Cursor API benchmark
-│   │   ├── input/                  # Test prompts
-│   │   ├── feature_wise/           # Feature-specific tests
-│   │   └── results/                # Benchmark outputs
-│   └── automation/
-│       ├── automate_test.py        # App generation tests
-│       └── use-cases/              # 7 app definitions
+├── 🧪 .test/
+│   ├── automation/
+│   │   └── usecase-to-app/          # Automated testing framework
+│   │       ├── usecases.json        # App prompts (no hints)
+│   │       ├── criteria.json        # Validation criteria
+│   │       ├── test_steps.json      # Testing steps
+│   │       ├── automate_test.py     # Generation + validation
+│   │       ├── run_tests.py         # Validation only
+│   │       ├── setup_demo.sh        # Demo environment setup
+│   │       └── validate_on_enter.sh # Interactive validation
+│   └── prompts_analysis/
+│       └── benchmark.py             # Performance benchmarking
 │
-└── 🔧 .dev/ (Internal Development - NOT committed)
-    └── log.md                      # Technical decisions log
+└── 🔧 Legacy files (root level - to be cleaned up)
+    ├── references/                  # Consolidated into skills/freshworks_app_dev_skill/references/
+    ├── SKILL.md                     # Moved to skills/
+    ├── skill.yaml                   # Removed (not needed for skills.sh)
+    └── kernel.prompt                # Removed (not part of skills.sh anatomy)
 ```
 
 ---
 
 ## Installation
 
-### For Cursor IDE
+### From GitHub (Recommended)
+
+```bash
+npx skills add https://github.com/freshworks-developers/freshworks-platform3
+```
+
+### From Local Path
 
 ```bash
 # Clone repo
@@ -80,15 +94,9 @@ git clone https://github.com/freshworks-developers/freshworks-platform3.git
 
 # Install to your project
 cd your-freshworks-app
-npx /path/to/freshworks-platform3
+npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 
 # Restart Cursor
-```
-
-### For skills.sh
-
-```bash
-npx skills add https://github.com/freshworks-developers/freshworks-platform3
 ```
 
 ### Manual Installation
