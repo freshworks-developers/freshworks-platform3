@@ -1,0 +1,44 @@
+{
+  "name": "@freshworks-developers/freshworks_app_dev_skill",
+  "version": "3.0.0",
+  "description": "Cursor AI skill for Freshworks Platform 3.0 app development",
+  "main": "SKILL.md",
+  "bin": {
+    "freshworks-app-dev-skill": "./scripts/install.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "keywords": [
+    "cursor",
+    "skill",
+    "freshworks",
+    "platform3",
+    "app-development",
+    "freshdesk",
+    "freshservice",
+    "freshsales",
+    "marketplace"
+  ],
+  "author": "Freshworks Developers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freshworks-developers/freshworks-platform3.git",
+    "directory": "skills/freshworks_app_dev_skill"
+  },
+  "bugs": {
+    "url": "https://github.com/freshworks-developers/freshworks-platform3/issues"
+  },
+  "homepage": "https://github.com/freshworks-developers/freshworks-platform3#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "SKILL.md",
+    ".cursor/",
+    "scripts/",
+    "references/",
+    "assets/"
+  ]
+}

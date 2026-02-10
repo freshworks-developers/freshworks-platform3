@@ -1,0 +1,197 @@
+{
+  "description": "Violation test cases - Common mistakes that should be detected and fixed",
+  "test_cases": [
+    {
+      "id": "violation_001",
+      "name": "Async function without await",
+      "violation": {
+        "code": "async function fetchData() {\n  return $request.invokeTemplate('api');\n}",
+        "error": "Async function has no 'await' expression"
+      },
+      "fix": {
+        "code": "async function fetchData() {\n  return await $request.invokeTemplate('api');\n}",
+        "explanation": "Add 'await' keyword or remove 'async'"
+      }
+    },
+    {
+      "id": "violation_002",
+      "name": "Unused function parameters",
+      "violation": {
+        "code": "exports = {\n  handler: function(args) {\n    console.log('Called');\n  }\n}",
+        "error": "Parameter 'args' is defined but never used"
+      },
+      "fix": {
+        "code": "exports = {\n  handler: function() {\n    console.log('Called');\n  }\n}",
+        "explanation": "Remove unused parameter or prefix with underscore: _args"
+      }
+    },
+    {
+      "id": "violation_003",
+      "name": "High cyclomatic complexity",
+      "violation": {
+        "code": "function process(data) {\n  if (a) {\n    if (b) {\n      for (let i = 0; i < items.length; i++) {\n        if (items[i].valid) {\n          // nested logic\n        }\n      }\n    }\n  }\n}",
+        "error": "Function complexity exceeds 7"
+      },
+      "fix": {
+        "approach": "Extract helper functions to reduce nesting",
+        "example": "function process(data) {\n  const validItems = getValidItems(data);\n  return processItems(validItems);\n}"
+      }
+    },
+    {
+      "id": "violation_004",
+      "name": "Variable scope with async/await",
+      "violation": {
+        "code": "let client;\nasync function init() {\n  client = await app.initialized();\n}\ninit();\n// Use client here - race condition!",
+        "error": "Race condition - client may not be initialized"
+      },
+      "fix": {
+        "code": "(async function() {\n  const client = await app.initialized();\n  // Use client here safely\n})();",
+        "explanation": "Use IIFE pattern to keep client in same scope"
+      }
+    },
+    {
+      "id": "violation_005",
+      "name": "Missing icon.svg file",
+      "violation": {
+        "files": [
+          "app/index.html",
+          "app/scripts/app.js",
+          "manifest.json"
+        ],
+        "error": "FDK validation fails - icon.svg not found"
+      },
+      "fix": {
+        "action": "ALWAYS create app/styles/images/icon.svg",
+        "explanation": "Icon file is required for FDK validation"
+      }
+    },
+    {
+      "id": "violation_006",
+      "name": "Request not declared in manifest",
+      "violation": {
+        "manifest": {
+          "modules": {
+            "common": {}
+          }
+        },
+        "code": "$request.invokeTemplate('myApiCall', {})",
+        "error": "Request template 'myApiCall' not declared in manifest"
+      },
+      "fix": {
+        "manifest": {
+          "modules": {
+            "common": {
+              "requests": {
+                "myApiCall": {}
+              }
+            }
+          }
+        },
+        "explanation": "All request templates must be declared in manifest.json"
+      }
+    },
+    {
+      "id": "violation_007",
+      "name": "SMI function not declared in manifest",
+      "violation": {
+        "manifest": {
+          "modules": {
+            "common": {}
+          }
+        },
+        "code": "client.request.invoke('myFunction', {})",
+        "error": "SMI function 'myFunction' not declared in manifest"
+      },
+      "fix": {
+        "manifest": {
+          "modules": {
+            "common": {
+              "functions": {
+                "myFunction": {}
+              }
+            }
+          }
+        },
+        "explanation": "All SMI functions must be declared in manifest.json"
+      }
+    },
+    {
+      "id": "violation_008",
+      "name": "OAuth request missing options",
+      "violation": {
+        "requests_json": {
+          "getOAuthData": {
+            "schema": {
+              "method": "GET",
+              "host": "api.github.com",
+              "path": "/user"
+            }
+          }
+        },
+        "error": "OAuth request missing 'options.oauth' configuration"
+      },
+      "fix": {
+        "requests_json": {
+          "getOAuthData": {
+            "schema": {
+              "method": "GET",
+              "host": "api.github.com",
+              "path": "/user",
+              "headers": {
+                "Authorization": "bearer <%= access_token %>"
+              }
+            },
+            "options": {
+              "oauth": "github"
+            }
+          }
+        },
+        "explanation": "OAuth requests require options.oauth and <%= access_token %> header"
+      }
+    },
+    {
+      "id": "violation_009",
+      "name": "Missing alwaysApply in .mdc rules",
+      "violation": {
+        "rule_file": ".cursor/rules/freshworks-platform3.mdc",
+        "frontmatter": {
+          "alwaysApply": false
+        },
+        "error": "Rule not activating automatically"
+      },
+      "fix": {
+        "frontmatter": {
+          "alwaysApply": true
+        },
+        "explanation": "Set alwaysApply: true to ensure Platform 3.0 rules are always enforced"
+      }
+    },
+    {
+      "id": "violation_010",
+      "name": "Missing product module in manifest",
+      "violation": {
+        "manifest": {
+          "platform-version": "3.0",
+          "modules": {
+            "common": {
+              "requests": {}
+            }
+          }
+        },
+        "error": "FDK validation fails - at least one product module required"
+      },
+      "fix": {
+        "manifest": {
+          "platform-version": "3.0",
+          "modules": {
+            "common": {
+              "requests": {}
+            },
+            "support_ticket": {}
+          }
+        },
+        "explanation": "Always include at least one product module (even if empty)"
+      }
+    }
+  ]
+}
