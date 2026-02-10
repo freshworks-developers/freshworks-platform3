@@ -6,7 +6,7 @@ An AI-powered development skill for building Freshworks Platform 3.0 marketplace
 
 ```bash
 # Install from GitHub
-npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks_app_dev_skill
+npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks-app-dev-skill
 
 # Or install from local path
 cd your-freshworks-app
@@ -28,7 +28,7 @@ npx skills add /path/to/freshworks-platform3/skills/freshworks_app_dev_skill
 ### From GitHub (Recommended)
 
 ```bash
-npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks_app_dev_skill
+npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks-app-dev-skill
 ```
 
 ### From Local Path
