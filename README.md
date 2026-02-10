@@ -74,6 +74,64 @@ It uses serverless-only when:
 - ❌ Pure automation with zero user interaction
 - ❌ Background tasks that never need monitoring
 
+## Available Commands
+
+The skill provides helpful commands for common tasks:
+
+### `/migrate` - Migrate from Platform 2.x to 3.0
+
+Automatically converts your Platform 2.x app to Platform 3.0:
+
+```
+/migrate
+```
+
+**What it does:**
+- ✅ Updates `manifest.json` from 2.x to 3.0 structure
+- ✅ Converts `product` to `modules` structure
+- ✅ Migrates `$request.post/get/put/delete` to `$request.invokeTemplate()`
+- ✅ Converts plain HTML to Crayons components
+- ✅ Updates OAuth config with `integrations` wrapper
+- ✅ Reorganizes file structure to Platform 3.0 standards
+- ✅ Creates request templates from `whitelisted-domains`
+- ✅ Generates migration report with all changes
+
+**Example:**
+```bash
+cd my-platform-2x-app
+# Ask AI: "/migrate"
+# Review MIGRATION_REPORT.md
+fdk validate
+```
+
+### `/readme` - Generate App Documentation
+
+Automatically generates comprehensive README for your app:
+
+```
+/readme
+```
+
+**What it does:**
+- ✅ Analyzes your app structure and features
+- ✅ Detects app type (Frontend/Serverless/Hybrid/OAuth)
+- ✅ Documents all installation parameters
+- ✅ Lists all event handlers and their triggers
+- ✅ Documents external API integrations
+- ✅ Provides setup instructions for OAuth
+- ✅ Includes troubleshooting section
+- ✅ Generates file structure documentation
+
+**Generated sections:**
+- App overview and features
+- Prerequisites and installation
+- Configuration (iparams, OAuth, request templates)
+- Local development instructions
+- Event handler documentation
+- API integration details
+- Troubleshooting guide
+- Support resources
+
 ### Supported Products
 
 | Product | Modules |
