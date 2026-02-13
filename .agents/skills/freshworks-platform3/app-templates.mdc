@@ -5,17 +5,34 @@ alwaysApply: true
 
 # Platform 3.0 App Templates
 
-**CRITICAL ENFORCEMENT:**
-- ❌ NEVER use `"whitelisted-domains"` - It's Platform 2.3 syntax, deprecated and invalid in 3.0
-- ❌ NEVER use `"product"` structure - Use `"modules"` in Platform 3.0
-- ❌ NEVER use plain HTML buttons/inputs/selects/textarea - Use Crayons components ONLY
-- ❌ NEVER use `<button>`, `<input>`, `<select>`, `<textarea>` - These will cause validation failures
-- ✅ ALWAYS start with skeleton templates below
-- ✅ ALWAYS use `"modules"` structure
-- ✅ ALWAYS include `"engines"` block
-- ✅ ALWAYS use Crayons components for UI (fw-button, fw-input, fw-select, fw-textarea, etc.)
-- ✅ ALWAYS include Crayons CDN in ALL HTML files (even if no UI components yet)
-- ✅ ALWAYS validate: If HTML file exists, it MUST have Crayons CDN and use Crayons components
+**UNIVERSAL CRITICAL ENFORCEMENT - NO EXCEPTIONS - NO CONTRADICTIONS:**
+
+### ❌ NEVER Generate These (Immediate Rejection)
+- ❌ `"whitelisted-domains"` - Platform 2.3 syntax
+- ❌ `"product"` structure - Use `"modules"`
+- ❌ Plain HTML: `<button>`, `<input>`, `<select>`, `<textarea>`
+- ❌ `{{variable}}` syntax - Causes FQDN errors
+- ❌ Host with path: `api.example.com/api` - MUST be FQDN only
+- ❌ Host with encoded chars: `%7B%7Bvar%7D%7D.example.com`
+- ❌ Path without `/`: `api/endpoint` - MUST start with `/`
+- ❌ App files in workspace root
+- ❌ Frontend app without `icon.svg` - #1 validation failure
+- ❌ OAuth credentials in `iparams.json`
+
+### ✅ ALWAYS Generate These (Mandatory)
+- ✅ **`app/styles/images/icon.svg`** - MUST EXIST - NO EXCEPTIONS
+- ✅ **FQDN only hosts** - `api.example.com` (no path)
+- ✅ **Paths start with `/`** - `/api/v2/endpoint`
+- ✅ **`<%= context.variable %>`** - For iparams
+- ✅ **`<%= iparam.name %>`** - For app-specific iparams
+- ✅ **`<%= access_token %>`** - For OAuth
+- ✅ **`"modules"` structure** - NOT `"product"`
+- ✅ **`"engines"` block** - node and fdk versions
+- ✅ **Crayons components** - fw-button, fw-input, etc.
+- ✅ **Crayons CDN in ALL HTML** - BOTH script tags
+- ✅ **New app folder** - e.g., `my-app/`
+- ✅ **`oauth_iparams` in `oauth_config.json`**
+- ✅ **At least one product module**
 
 ---
 
@@ -41,7 +58,24 @@ When user says "Freshdesk app" or "Freshservice app":
 | Frontend UI only | Template 1 (Frontend) | common + product module with location |
 | Serverless events | Template 2 (Serverless) | common + product module with events |
 | Frontend + Backend API | Template 3 (Hybrid) | common (requests + functions) + product module (location) |
-| OAuth integration | Template 4 (OAuth) | common (requests + functions + oauth) + product module |
+| OAuth integration (ONLY if required) | Template 4 (OAuth) | common (requests + functions + oauth) + product module |
+
+**CRITICAL: When to Use OAuth vs API Key**
+
+**Use OAuth ONLY when:**
+- ✅ Third-party service REQUIRES OAuth (GitHub, Jira, Salesforce, Google APIs, Slack, etc.)
+- ✅ User needs to authorize access to their account on the external service
+- ✅ App needs to act on behalf of the user
+- ✅ External service doesn't offer API key authentication
+
+**DO NOT use OAuth when:**
+- ❌ External service accepts API keys, tokens, or webhook URLs (Zapier, most REST APIs)
+- ❌ User can provide a simple API key or webhook URL
+- ❌ No user authorization flow is needed
+
+**Example:** "Zapier webhook sync" → ❌ NO OAuth (use webhook URL in iparams) | "GitHub issue sync" → ✅ OAuth required
+
+**Default: Use API key in iparams. Only use OAuth if service explicitly requires it.**
 
 ---
 
@@ -55,6 +89,7 @@ When user says "Freshdesk app" or "Freshservice app":
 - ✅ App provides **dashboard, reports, or visualizations**
 - ✅ User mentions "UI", "interface", "page", "view", "dashboard", "panel", "sidebar"
 - ✅ App needs a **placement** (ticket_sidebar, full_page_app, etc.)
+- ✅ User mentions sync app, you must create hybrid unless mentioned serverless
 
 **Use serverless only (Template 2) when:**
 - ❌ Pure automation with **zero user interaction**
@@ -67,14 +102,21 @@ When user says "Freshdesk app" or "Freshservice app":
 
 | Use Case | Frontend? | Why? |
 |----------|-----------|------|
-| "Zapier contact sync with webhook" | ✅ YES (Hybrid) | User needs to see sync status, manually trigger sync, configure which events to sync |
-| "Auto-sync contacts to Zapier on create" | ✅ YES (Hybrid) | User needs to monitor sync status, see errors, manually resync failed contacts |
+| "Zapier contact sync with webhook" | ✅ YES (Hybrid) | User needs to see sync status, manually trigger sync, configure which events to sync, Enforce a hybrid model | Enforce a hybrid model
+| "Auto-sync contacts to Zapier on create" | ✅ YES (Hybrid) | User needs to monitor sync status, see errors, manually resync failed contacts, Enforce a hybrid model |
 | "Send webhook on ticket close" | ❌ NO (Serverless) | Pure automation, no user interaction needed |
 | "Scheduled backup every night" | ❌ NO (Serverless) | Background task, no monitoring needed |
 | "GitHub issue sync" | ✅ YES (Hybrid) | User needs to see linked issues, manually create links, view sync status |
 | "Slack notification on ticket create" | ❌ NO (Serverless) | Pure notification, no user interaction |
 
 **Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
+
+**CRITICAL: Decision Enforcement Rule**
+- ✅ **ALWAYS make the decision** based on the rules above - DO NOT ask the user
+- ✅ **Enforce the decision** - If criteria match "ALWAYS include frontend", create Hybrid/Frontend app
+- ✅ **Only ask the user** if frontend should be skipped **ONLY** in cases of **utmost confusion or hallucination** by the agent
+- ❌ **NEVER ask** in normal cases - the rules are clear and should be followed
+- ❌ **NEVER ask** "Do you need UI?" - Make the decision based on the criteria
 
 ---
 
@@ -182,9 +224,14 @@ exports = {
 
 **CRITICAL:** FDK's parser fails if functions are defined BEFORE the exports block!
 
-### ✅ Pattern 5: Async Functions Must Use Await
+### ✅ Pattern 5: Async Functions Must Use Await - ZERO TOLERANCE
+
+**CRITICAL ENFORCEMENT:** Every `async` function MUST contain at least one `await` expression, OR remove `async` keyword.
+
+**Lint Error:** "Async function has no 'await' expression"
+
 ```javascript
-// ❌ WRONG: Async function without await (lint error)
+// ❌ WRONG: Async without await (LINT ERROR - NEVER DO THIS)
 exports = {
   syncAllContacts: async function(args) {
     return $request.invokeTemplate('apiCall', {});  // Missing await!
@@ -206,7 +253,11 @@ exports = {
 };
 ```
 
-**CRITICAL:** If a function is marked `async`, it MUST contain at least one `await` expression, or remove `async` keyword.
+**ENFORCEMENT:**
+- ✅ Every `async` MUST have `await`
+- ✅ If no `await`, REMOVE `async`
+- ❌ NEVER use `async` without `await`
+- **NON-NEGOTIABLE - ALWAYS ENFORCE**
 
 ### ✅ Pattern 6: Scheduled Events Cannot Be Declared in Manifest
 ```json
@@ -415,6 +466,10 @@ my-serverless-app/
 **Note:** `server.js` can be located in either:
 - `server/server.js` (recommended for organization)
 - `server.js` (root directory, also valid)
+
+**CRITICAL:** If app uses `config/iparams.json` with any parameters (not empty `{}`), MUST include `onAppInstall` event handler in `modules.common.events` to access iparams during installation.
+
+**CRITICAL:** If app has scheduled events (`$schedule.create()`), background tasks, webhooks, or recurring processes, MUST include `onAppUninstall` event handler in `modules.common.events` to clean up when app is uninstalled.
 
 ### manifest.json (CORRECT PLATFORM 3.0)
 ```json
@@ -718,56 +773,89 @@ my-oauth-app/
   "integrations": {
     "github": {
       "display_name": "GitHub",
-      "client_id": "{{client_id}}",
-      "client_secret": "{{client_secret}}",
+      "client_id": "<%= oauth_iparams.client_id %>",
+      "client_secret": "<%= oauth_iparams.client_secret %>",
       "authorize_url": "https://github.com/login/oauth/authorize",
       "token_url": "https://github.com/login/oauth/access_token",
       "token_type": "account",
       "options": {
         "scope": "repo"
+      },
+      "oauth_iparams": {
+        "client_id": {
+          "display_name": "GitHub Client ID",
+          "description": "Enter your GitHub OAuth App Client ID",
+          "type": "text",
+          "required": true
+        },
+        "client_secret": {
+          "display_name": "GitHub Client Secret",
+          "description": "Enter your GitHub OAuth App Client Secret",
+          "type": "text",
+          "required": true,
+          "secure": true
+        }
       }
     }
   }
 }
 ```
 
-### config/requests.json
+**CRITICAL:** Use `<%= oauth_iparams.client_id %>` and define `oauth_iparams` INSIDE the integration object
+
+### config/iparams.json (App-specific settings ONLY)
 ```json
 {
-  "getOAuthResource": {
+  "google_sheet_id": {
+    "display_name": "Target Google Sheet ID",
+    "description": "The ID found in your spreadsheet URL",
+    "type": "text",
+    "required": true,
+    "secure": false
+  }
+}
+```
+
+### config/requests.json (Using both OAuth and iparams)
+```json
+{
+  "googleSheetsAppend": {
     "schema": {
-      "method": "GET",
-      "host": "api.github.com",
-      "path": "/user/repos",
+      "protocol": "https",
+      "method": "POST",
+      "host": "sheets.googleapis.com",
+      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/<%= context.range %>:append",
       "headers": {
-        "Authorization": "bearer <%= access_token %>"
+        "Authorization": "Bearer <%= access_token %>",
+        "Content-Type": "application/json"
+      },
+      "query": {
+        "valueInputOption": "USER_ENTERED",
+        "insertDataOption": "INSERT_ROWS"
       }
     },
     "options": {
-      "oauth": "github"
+      "oauth": "google_sheets"
+    }
+  },
+  "googleSheetsGet": {
+    "schema": {
+      "protocol": "https",
+      "method": "GET",
+      "host": "sheets.googleapis.com",
+      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/Sheet1!A:E",
+      "headers": {
+        "Authorization": "Bearer <%= access_token %>"
+      }
+    },
+    "options": {
+      "oauth": "google_sheets"
     }
   }
 }
 ```
 
-### config/iparams.json
-```json
-{
-  "client_id": {
-    "display_name": "GitHub Client ID",
-    "description": "Enter your GitHub OAuth App Client ID",
-    "type": "text",
-    "required": true
-  },
-  "client_secret": {
-    "display_name": "GitHub Client Secret",
-    "description": "Enter your GitHub OAuth App Client Secret",
-    "type": "text",
-    "required": true,
-    "secure": true
-  }
-}
-```
+**ZERO TOLERANCE: This is the ONLY correct structure - no alternatives**
 
 ### server/server.js
 ```javascript
@@ -1015,6 +1103,8 @@ Before generating any manifest.json, verify:
   - `ticket_sidebar`, `asset_sidebar`, etc. → `modules.<product>.location`
 - [ ] **OAuth config has `integrations` wrapper** ✅
 - [ ] **OAuth request template has `options.oauth` and `access_token` header** ✅
+- [ ] **If iparams are used** → `onAppInstall` event handler declared in `modules.common.events` ✅
+- [ ] **If app has scheduled events/background tasks** → `onAppUninstall` event handler declared in `modules.common.events` ✅
 
 ### File Structure (CRITICAL - Common Failures!)
 - [ ] **Complete folder structure generated** ✅

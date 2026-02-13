@@ -1,0 +1,32 @@
+{
+  "graphApiGet": {
+    "schema": {
+      "protocol": "https",
+      "method": "GET",
+      "host": "graph.microsoft.com",
+      "path": "/v1.0<%= context.path %>",
+      "headers": {
+        "Authorization": "Bearer <%= access_token %>",
+        "Content-Type": "application/json"
+      }
+    },
+    "options": {
+      "oauth": "microsoft_graph"
+    }
+  },
+  "graphApiPatch": {
+    "schema": {
+      "protocol": "https",
+      "method": "PATCH",
+      "host": "graph.microsoft.com",
+      "path": "/v1.0<%= context.path %>",
+      "headers": {
+        "Authorization": "Bearer <%= access_token %>",
+        "Content-Type": "application/json"
+      }
+    },
+    "options": {
+      "oauth": "microsoft_graph"
+    }
+  }
+}

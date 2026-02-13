@@ -5,17 +5,34 @@ alwaysApply: true
 
 # Platform 3.0 App Templates
 
-**CRITICAL ENFORCEMENT:**
-- ❌ NEVER use `"whitelisted-domains"` - It's Platform 2.3 syntax, deprecated and invalid in 3.0
-- ❌ NEVER use `"product"` structure - Use `"modules"` in Platform 3.0
-- ❌ NEVER use plain HTML buttons/inputs/selects/textarea - Use Crayons components ONLY
-- ❌ NEVER use `<button>`, `<input>`, `<select>`, `<textarea>` - These will cause validation failures
-- ✅ ALWAYS start with skeleton templates below
-- ✅ ALWAYS use `"modules"` structure
-- ✅ ALWAYS include `"engines"` block
-- ✅ ALWAYS use Crayons components for UI (fw-button, fw-input, fw-select, fw-textarea, etc.)
-- ✅ ALWAYS include Crayons CDN in ALL HTML files (even if no UI components yet)
-- ✅ ALWAYS validate: If HTML file exists, it MUST have Crayons CDN and use Crayons components
+**UNIVERSAL CRITICAL ENFORCEMENT - NO EXCEPTIONS - NO CONTRADICTIONS:**
+
+### ❌ NEVER Generate These (Immediate Rejection)
+- ❌ `"whitelisted-domains"` - Platform 2.3 syntax, deprecated and invalid in 3.0
+- ❌ `"product"` structure - Use `"modules"` in Platform 3.0
+- ❌ Plain HTML: `<button>`, `<input>`, `<select>`, `<textarea>` - Use Crayons ONLY
+- ❌ `{{variable}}` syntax - Causes FQDN validation errors
+- ❌ Host with path: `api.example.com/api` - MUST be FQDN only
+- ❌ Host with encoded chars: `%7B%7Bvar%7D%7D.example.com` - Invalid
+- ❌ Path without `/`: `api/endpoint` - MUST start with `/`
+- ❌ App files in workspace root - MUST create new app folder
+- ❌ Frontend app without `icon.svg` - #1 validation failure cause
+- ❌ OAuth credentials in `iparams.json` - MUST be in `oauth_iparams`
+
+### ✅ ALWAYS Generate These (Mandatory)
+- ✅ **`app/styles/images/icon.svg`** - MUST EXIST for frontend apps - NO EXCEPTIONS
+- ✅ **FQDN only hosts** - `api.example.com` (no path, no encoded characters)
+- ✅ **Paths start with `/`** - `/api/v2/endpoint`
+- ✅ **`<%= context.variable %>`** - For iparams in request templates
+- ✅ **`<%= iparam.name %>`** - For app-specific iparams
+- ✅ **`<%= access_token %>`** - For OAuth authorization
+- ✅ **`"modules"` structure** - NOT `"product"`
+- ✅ **`"engines"` block** - node and fdk versions
+- ✅ **Crayons components** - fw-button, fw-input, fw-select, fw-textarea, etc.
+- ✅ **Crayons CDN in ALL HTML** - BOTH script tags (ESM and nomodule)
+- ✅ **New app folder** - e.g., `my-app/` in parent directory
+- ✅ **`oauth_iparams` in `oauth_config.json`** - NOT in regular iparams.json
+- ✅ **At least one product module** - Even if empty `{}`
 
 ---
 
@@ -41,7 +58,24 @@ When user says "Freshdesk app" or "Freshservice app":
 | Frontend UI only | Template 1 (Frontend) | common + product module with location |
 | Serverless events | Template 2 (Serverless) | common + product module with events |
 | Frontend + Backend API | Template 3 (Hybrid) | common (requests + functions) + product module (location) |
-| OAuth integration | Template 4 (OAuth) | common (requests + functions + oauth) + product module |
+| OAuth integration (ONLY if required) | Template 4 (OAuth) | common (requests + functions + oauth) + product module |
+
+**CRITICAL: When to Use OAuth vs API Key**
+
+**Use OAuth ONLY when:**
+- ✅ Third-party service REQUIRES OAuth (GitHub, Jira, Salesforce, Google APIs, Slack, etc.)
+- ✅ User needs to authorize access to their account on the external service
+- ✅ App needs to act on behalf of the user
+- ✅ External service doesn't offer API key authentication
+
+**DO NOT use OAuth when:**
+- ❌ External service accepts API keys, tokens, or webhook URLs (Zapier, most REST APIs)
+- ❌ User can provide a simple API key or webhook URL
+- ❌ No user authorization flow is needed
+
+**Example:** "Zapier webhook sync" → ❌ NO OAuth (use webhook URL in iparams) | "GitHub issue sync" → ✅ OAuth required
+
+**Default: Use API key in iparams. Only use OAuth if service explicitly requires it.**
 
 ---
 
@@ -55,6 +89,7 @@ When user says "Freshdesk app" or "Freshservice app":
 - ✅ App provides **dashboard, reports, or visualizations**
 - ✅ User mentions "UI", "interface", "page", "view", "dashboard", "panel", "sidebar"
 - ✅ App needs a **placement** (ticket_sidebar, full_page_app, etc.)
+- ✅ User mentions sync app, you must create hybrid unless mentioned serverless
 
 **Use serverless only (Template 2) when:**
 - ❌ Pure automation with **zero user interaction**
@@ -67,14 +102,21 @@ When user says "Freshdesk app" or "Freshservice app":
 
 | Use Case | Frontend? | Why? |
 |----------|-----------|------|
-| "Zapier contact sync with webhook" | ✅ YES (Hybrid) | User needs to see sync status, manually trigger sync, configure which events to sync |
-| "Auto-sync contacts to Zapier on create" | ✅ YES (Hybrid) | User needs to monitor sync status, see errors, manually resync failed contacts |
+| "Zapier contact sync with webhook" | ✅ YES (Hybrid) | User needs to see sync status, manually trigger sync, configure which events to sync, Enforce a hybrid model | Enforce a hybrid model
+| "Auto-sync contacts to Zapier on create" | ✅ YES (Hybrid) | User needs to monitor sync status, see errors, manually resync failed contacts, Enforce a hybrid model |
 | "Send webhook on ticket close" | ❌ NO (Serverless) | Pure automation, no user interaction needed |
 | "Scheduled backup every night" | ❌ NO (Serverless) | Background task, no monitoring needed |
 | "GitHub issue sync" | ✅ YES (Hybrid) | User needs to see linked issues, manually create links, view sync status |
 | "Slack notification on ticket create" | ❌ NO (Serverless) | Pure notification, no user interaction |
 
 **Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
+
+**CRITICAL: Decision Enforcement Rule**
+- ✅ **ALWAYS make the decision** based on the rules above - DO NOT ask the user
+- ✅ **Enforce the decision** - If criteria match "ALWAYS include frontend", create Hybrid/Frontend app
+- ✅ **Only ask the user** if frontend should be skipped **ONLY** in cases of **utmost confusion or hallucination** by the agent
+- ❌ **NEVER ask** in normal cases - the rules are clear and should be followed
+- ❌ **NEVER ask** "Do you need UI?" - Make the decision based on the criteria
 
 ---
 
@@ -182,22 +224,31 @@ exports = {
 
 **CRITICAL:** FDK's parser fails if functions are defined BEFORE the exports block!
 
-### ✅ Pattern 5: Async Functions Must Use Await
+### ✅ Pattern 5: Async Functions Must Use Await - ZERO TOLERANCE
+
+**CRITICAL ENFORCEMENT:** If a function is marked `async`, it MUST contain at least one `await` expression, OR remove `async` keyword.
+
+**Lint Error:** "Async function has no 'await' expression"
+
 ```javascript
-// ❌ WRONG: Async function without await (lint error)
+// ❌ WRONG: Async function without await (LINT ERROR - NEVER DO THIS)
 exports = {
   syncAllContacts: async function(args) {
     return $request.invokeTemplate('apiCall', {});  // Missing await!
   }
 };
+```
 
+```javascript
 // ✅ CORRECT Option 1: Add await
 exports = {
   syncAllContacts: async function(args) {
     return await $request.invokeTemplate('apiCall', {});
   }
 };
+```
 
+```javascript
 // ✅ CORRECT Option 2: Remove async if no await needed
 exports = {
   syncAllContacts: function(args) {
@@ -206,7 +257,11 @@ exports = {
 };
 ```
 
-**CRITICAL:** If a function is marked `async`, it MUST contain at least one `await` expression, or remove `async` keyword.
+**ENFORCEMENT RULES:**
+- ✅ Every `async` function MUST have at least one `await` expression
+- ✅ If no `await` is needed, REMOVE `async` keyword
+- ❌ NEVER use `async` without `await` - causes mandatory lint failure
+- **THIS IS NON-NEGOTIABLE - ALWAYS ENFORCE**
 
 ### ✅ Pattern 6: Scheduled Events Cannot Be Declared in Manifest
 ```json
@@ -416,6 +471,10 @@ my-serverless-app/
 - `server/server.js` (recommended for organization)
 - `server.js` (root directory, also valid)
 
+**CRITICAL:** If app uses `config/iparams.json` with any parameters (not empty `{}`), MUST include `onAppInstall` event handler in `modules.common.events` to access iparams during installation.
+
+**CRITICAL:** If app has scheduled events (`$schedule.create()`), background tasks, webhooks, or recurring processes, MUST include `onAppUninstall` event handler in `modules.common.events` to clean up when app is uninstalled.
+
 ### manifest.json (CORRECT PLATFORM 3.0)
 ```json
 {
@@ -557,12 +616,14 @@ my-hybrid-app/
       "host": "api.example.com",
       "path": "/data",
       "headers": {
-        "Authorization": "Bearer {{api_key}}"
+        "Authorization": "Bearer <%= context.api_key %>"
       }
     }
   }
 }
 ```
+
+**CRITICAL:** Use `<%= context.variable %>` for iparams, NOT `{{variable}}`
 
 ### config/iparams.json
 ```json
@@ -718,56 +779,96 @@ my-oauth-app/
   "integrations": {
     "github": {
       "display_name": "GitHub",
-      "client_id": "{{client_id}}",
-      "client_secret": "{{client_secret}}",
+      "client_id": "<%= oauth_iparams.client_id %>",
+      "client_secret": "<%= oauth_iparams.client_secret %>",
       "authorize_url": "https://github.com/login/oauth/authorize",
       "token_url": "https://github.com/login/oauth/access_token",
       "token_type": "account",
       "options": {
         "scope": "repo"
+      },
+      "oauth_iparams": {
+        "client_id": {
+          "display_name": "GitHub Client ID",
+          "description": "Enter your GitHub OAuth App Client ID",
+          "type": "text",
+          "required": true
+        },
+        "client_secret": {
+          "display_name": "GitHub Client Secret",
+          "description": "Enter your GitHub OAuth App Client Secret",
+          "type": "text",
+          "required": true,
+          "secure": true
+        }
       }
     }
   }
 }
 ```
 
-### config/requests.json
+**CRITICAL OAuth Rules - ZERO TOLERANCE:**
+- ✅ Use `<%= oauth_iparams.client_id %>` and `<%= oauth_iparams.client_secret %>`
+- ✅ Define `oauth_iparams` INSIDE the integration object in `oauth_config.json`
+- ✅ Use separate `config/iparams.json` ONLY for app-specific settings (NOT OAuth credentials)
+- ✅ Use `<%= iparam.parameter_name %>` to access iparams in request templates
+- ✅ Use `<%= access_token %>` for OAuth authorization
+- ❌ NEVER put client_id/client_secret in `config/iparams.json`
+- ❌ NEVER use `{{variable}}` syntax - use `<%= variable %>` ONLY
+
+### config/iparams.json (App-specific settings)
 ```json
 {
-  "getOAuthResource": {
+  "google_sheet_id": {
+    "display_name": "Target Google Sheet ID",
+    "description": "The ID found in your spreadsheet URL",
+    "type": "text",
+    "required": true,
+    "secure": false
+  }
+}
+```
+
+### config/requests.json (Using both OAuth and iparams)
+```json
+{
+  "googleSheetsAppend": {
     "schema": {
-      "method": "GET",
-      "host": "api.github.com",
-      "path": "/user/repos",
+      "protocol": "https",
+      "method": "POST",
+      "host": "sheets.googleapis.com",
+      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/<%= context.range %>:append",
       "headers": {
-        "Authorization": "bearer <%= access_token %>"
+        "Authorization": "Bearer <%= access_token %>",
+        "Content-Type": "application/json"
+      },
+      "query": {
+        "valueInputOption": "USER_ENTERED",
+        "insertDataOption": "INSERT_ROWS"
       }
     },
     "options": {
-      "oauth": "github"
+      "oauth": "google_sheets"
+    }
+  },
+  "googleSheetsGet": {
+    "schema": {
+      "protocol": "https",
+      "method": "GET",
+      "host": "sheets.googleapis.com",
+      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/Sheet1!A:E",
+      "headers": {
+        "Authorization": "Bearer <%= access_token %>"
+      }
+    },
+    "options": {
+      "oauth": "google_sheets"
     }
   }
 }
 ```
 
-### config/iparams.json
-```json
-{
-  "client_id": {
-    "display_name": "GitHub Client ID",
-    "description": "Enter your GitHub OAuth App Client ID",
-    "type": "text",
-    "required": true
-  },
-  "client_secret": {
-    "display_name": "GitHub Client Secret",
-    "description": "Enter your GitHub OAuth App Client Secret",
-    "type": "text",
-    "required": true,
-    "secure": true
-  }
-}
-```
+**THIS IS THE ONLY CORRECT STRUCTURE - NO ALTERNATIVES ALLOWED**
 
 ### server/server.js
 ```javascript
@@ -793,7 +894,7 @@ exports = {
 
 ## STRICT ENFORCEMENT RULES
 
-### ❌ NEVER Generate These (Platform 2.3 Patterns):
+### ❌ NEVER Generate These (Platform 2.3 Patterns + OAuth Errors):
 
 ```json
 // WRONG - DO NOT GENERATE
@@ -815,6 +916,34 @@ exports = {
 // WRONG - DO NOT GENERATE
 {
   "platform-version": "2.3"  // ❌ USE "3.0"
+}
+```
+
+```json
+// WRONG - OAuth credentials in regular iparams.json
+{
+  "client_id": { ... },
+  "client_secret": { ... }  // ❌ MUST be in oauth_iparams inside oauth_config.json
+}
+```
+
+```json
+// WRONG - Using {{variable}} syntax
+{
+  "client_id": "{{client_id}}",  // ❌ USE <%= oauth_iparams.client_id %>
+  "path": "/sheet/{{sheet_id}}"  // ❌ USE <%= iparam.sheet_id %>
+}
+```
+
+```json
+// WRONG - OAuth without oauth_iparams object
+{
+  "integrations": {
+    "service": {
+      "client_id": "hardcoded",  // ❌ MUST use <%= oauth_iparams.client_id %>
+      "client_secret": "hardcoded"
+    }
+  }
 }
 ```
 
@@ -860,20 +989,28 @@ When user needs to call an external API:
   "myApiCall": {
     "schema": {
       "method": "GET",
-      "host": "api.example.com",
+      "host": "<%= context.subdomain %>.example.com",
       "path": "/endpoint",
       "headers": {
-        "Authorization": "Bearer {{api_key}}"
+        "Authorization": "Bearer <%= context.api_key %>"
       }
     }
   }
 }
 ```
 
+**CRITICAL:** 
+- ✅ Use `<%= context.variable %>` for iparams (NOT `{{variable}}`)
+- ✅ Host must be FQDN only (no path)
+- ✅ Path must start with `/`
+
 ### Step 3: Call from backend
 ```javascript
 const response = await $request.invokeTemplate('myApiCall', {
-  context: {},
+  context: {
+    subdomain: args.iparams.subdomain,
+    api_key: args.iparams.api_key
+  },
   body: JSON.stringify({ data: 'value' })
 });
 ```
@@ -997,9 +1134,18 @@ ALWAYS:
 
 ---
 
-## Validation Checklist
+## UNIVERSAL VALIDATION CHECKLIST - MANDATORY FOR ALL APPS
 
-Before generating any manifest.json, verify:
+**BEFORE generating ANY code, ALL items MUST pass:**
+
+### 🔴 CRITICAL - Top Validation Failures (Fix These First!)
+- [ ] **`app/styles/images/icon.svg` EXISTS** ✅ - #1 FDK validation failure - MUST CREATE
+- [ ] **Host is FQDN only** ✅ - NO path (`api.example.com` not `api.example.com/api`)
+- [ ] **Host has NO encoded characters** ✅ - NO `%7B%7B` patterns
+- [ ] **Path starts with `/`** ✅ - MUST begin with forward slash
+- [ ] **Use `<%= variable %>`** ✅ - NEVER `{{variable}}` (causes FQDN errors)
+- [ ] **Crayons CDN in ALL HTML** ✅ - BOTH script tags (ESM and nomodule)
+- [ ] **Helper functions AFTER exports** ✅ - FDK parser requirement
 
 ### Platform 3.0 Structure
 - [ ] `"platform-version": "3.0"` ✅
@@ -1010,73 +1156,62 @@ Before generating any manifest.json, verify:
 - [ ] All SMI functions declared in `"functions": {}` ✅
 - [ ] NO `"whitelisted-domains"` ✅
 - [ ] Correct module name for product ✅
+
+### Location Placement
 - [ ] **Locations in correct module** ✅
   - `full_page_app` and `cti_global_sidebar` → `modules.common.location`
   - `ticket_sidebar`, `asset_sidebar`, etc. → `modules.<product>.location`
+
+### OAuth Structure (If OAuth is used)
 - [ ] **OAuth config has `integrations` wrapper** ✅
-- [ ] **OAuth request template has `options.oauth` and `access_token` header** ✅
+- [ ] **`oauth_iparams` in `oauth_config.json`** ✅ - NOT in regular iparams.json
+- [ ] **Use `<%= oauth_iparams.client_id %>`** ✅ - Correct syntax
+- [ ] **OAuth request has `options.oauth`** ✅ - MUST be present
+- [ ] **OAuth request has `<%= access_token %>`** ✅ - In Authorization header
 
-### File Structure (CRITICAL - Common Failures!)
-- [ ] **Complete folder structure generated** ✅
-  - Frontend apps: `app/scripts/`, `app/styles/images/`
-- [ ] **icon.svg ALWAYS created** ✅ - `app/styles/images/icon.svg`
-- [ ] **style.css created** ✅ - `app/styles/style.css`
-- [ ] **All HTML, JS files created** ✅
+### Request Templates (FQDN Enforcement)
+- [ ] **Host is FQDN only** ✅ - `api.example.com` (NO path, NO encoded chars)
+- [ ] **Path starts with `/`** ✅ - `/api/v2/endpoint`
+- [ ] **Use `<%= context.variable %>`** ✅ - For dynamic context
+- [ ] **Use `<%= iparam.name %>`** ✅ - For app-specific iparams
+- [ ] **Use `<%= access_token %>`** ✅ - For OAuth (NOT `{{access_token}}`)
 
-### Code Quality (Based on Real Failures!)
+### File Structure (Frontend Apps)
+- [ ] **`app/styles/images/icon.svg`** ✅ - MUST EXIST - NO EXCEPTIONS
+- [ ] **`app/index.html`** ✅ - MUST include Crayons CDN
+- [ ] **`app/scripts/app.js`** ✅ - MUST use IIFE pattern
+- [ ] **`app/styles/style.css`** ✅ - MUST exist
+- [ ] **Complete folder structure** ✅ - `app/scripts/`, `app/styles/images/`
+
+### Code Quality
 - [ ] **Function complexity ≤ 7** ✅
-  - Break complex functions into helpers
-  - Extract nested logic
-- [ ] **No async variable scoping issues** ✅
-  - Use IIFE pattern: `(async function() { ... })()`
-  - Declare variables in same scope
-  - Warning: "'client' declared and assigned in different scopes"
-- [ ] **No unused parameters** ✅
-  - Remove unused parameters
-  - Or use underscore prefix: `_args`
-- [ ] **Only use `async` when you `await`** ✅
-  - Remove `async` keyword if no `await` inside
-  - Lint error: "Async function has no 'await' expression"
+- [ ] **No async variable scoping issues** ✅ - Use IIFE pattern
+- [ ] **No unused parameters** ✅ - Remove or prefix with `_`
+- [ ] **ASYNC MUST HAVE AWAIT** ✅ - **ZERO TOLERANCE** - If `async`, MUST have `await`, OR remove `async`
 - [ ] **No unreachable code** ✅
-  - Remove code after return statements
-  - Restructure control flow if needed
-  - Lint error: "Unreachable code"
-- [ ] **Scheduled events NOT in manifest** ✅
-  - ❌ NEVER declare `onScheduled*` events in manifest
-  - ✅ Create scheduled events dynamically with `$schedule.create()`
-  - Platform error: "Invalid event: 'onScheduledSync' for module: common"
-- [ ] **Helper functions AFTER exports** ✅
-  - ❌ NEVER define functions BEFORE exports block
-  - ✅ Define helpers INSIDE exports, AFTER exports, or inline
-  - FDK parser error: "Error while parsing file containing serverless functions"
-- [ ] **NEVER use deprecated Request API methods** ✅
-  - ❌ NO `$request.post()`, `.get()`, `.put()`, `.delete()`
-  - ✅ ALWAYS use `$request.invokeTemplate()`
-  - Platform error: "post is no longer supported in Request API"
-- [ ] **Proper error handling** ✅
-  - Use try/catch blocks
-  - Handle API failures gracefully
+- [ ] **Scheduled events NOT in manifest** ✅ - Create dynamically
+- [ ] **Helper functions AFTER exports** ✅ - FDK parser requirement
+- [ ] **NEVER use deprecated Request API** ✅ - Use `$request.invokeTemplate()`
 
-### Crayons UI (Frontend Only - STRICT ENFORCEMENT!)
-- [ ] **Crayons CDN included in ALL HTML files** ✅
-  - Must include BOTH script tags (ESM and nomodule)
-  - Required even if no UI components yet
-- [ ] **NO plain HTML form elements** ✅
-  - ❌ NO `<button>` - Use `<fw-button>`
-  - ❌ NO `<input>` - Use `<fw-input>`
-  - ❌ NO `<select>` - Use `<fw-select>` with `<fw-select-option>`
-  - ❌ NO `<textarea>` - Use `<fw-textarea>`
-  - ❌ NO `<label>` - Use `<fw-label>` or `label` attribute on components
-- [ ] **Use Crayons components ONLY** ✅
-  - All interactive elements must be Crayons components
-  - All form inputs must be Crayons components
-  - All buttons must be Crayons components
-- [ ] **Crayons event listeners** ✅
-  - Use `fwClick` for buttons (not `click`)
-  - Use `fwInput` for inputs (not `input`)
-  - Use `fwChange` for selects (not `change`)
+**CRITICAL: Async/Await Enforcement**
+- Lint error: "Async function has no 'await' expression"
+- Every `async` function MUST contain at least one `await`
+- If no `await` is needed, REMOVE `async` keyword
+- **NON-NEGOTIABLE - ALWAYS ENFORCE**
 
-If ANY of these fail → REJECT and fix before generating!
+### Event Handlers
+- [ ] **If iparams are used** → `onAppInstall` event handler declared ✅
+- [ ] **If scheduled events/background tasks** → `onAppUninstall` event handler declared ✅
+
+### Crayons UI (Frontend Only)
+- [ ] **Crayons CDN in ALL HTML files** ✅ - BOTH script tags
+- [ ] **NO plain HTML elements** ✅ - NO `<button>`, `<input>`, `<select>`, `<textarea>`
+- [ ] **Use Crayons components ONLY** ✅ - `<fw-button>`, `<fw-input>`, etc.
+- [ ] **Use Crayons events** ✅ - `fwClick`, `fwInput`, `fwChange`
+
+**IF ANY ITEM FAILS → STOP → FIX → VALIDATE → THEN PROCEED**
+
+**NO EXCEPTIONS - NO CONTRADICTIONS - UNIVERSAL ENFORCEMENT**
 
 ---
 
@@ -1351,33 +1486,3 @@ All Crayons components are documented in `references/common/crayons-docs/`
 - And 50+ more components...
 
 **If user needs UI, ALWAYS use Crayons. No plain HTML elements allowed!**
-
----
-
-## After Generating the App
-
-**ALWAYS include this message after successfully generating an app:**
-
-```
-✅ App generated successfully!
-
-📖 **Next Steps:**
-
-The README.md file contains comprehensive setup instructions, including:
-- How to configure installation parameters (iparams)
-- How to set up OAuth credentials (if applicable)
-- How to configure external API keys and request templates
-- How to test the app locally using `fdk run`
-- How to validate the app using `fdk validate`
-- Product-specific setup requirements
-
-Please review the README.md file before testing the app.
-
-To test the app:
-1. Install FDK if not already installed: `npm install -g @freshworks/fdk`
-2. Navigate to the app directory
-3. Run: `fdk run`
-4. Follow the prompts to select your product and test account
-```
-
-**Include this message to guide users to the documentation you've generated.**

@@ -1,0 +1,759 @@
+---
+description: Comprehensive guide to creating Freshworks AI Action apps from scratch, including app scaffolding, configuration, and iterative action implementation
+alwaysApply: false
+globs: ["**/actions.json", "**/server.js", "**/manifest.json"]
+---
+
+# Create Freshworks AI Action App
+
+## Context
+
+This skill guides the creation of a complete Freshworks AI Action app from scratch. It enforces a systematic workflow, proper file structure, and adherence to Freshworks Platform 3.0 standards.
+
+**AI Actions Overview:**
+- Actions are declared functions exposed via `actions.json` with input/output JSON schemas
+- Each action has a corresponding SMI function in `server.js` with the same name (case-sensitive)
+- Actions enable automation flows, workflows, and AI assistants to invoke app logic
+- Supported products: Freshdesk, Freshchat, Freshworks CRM, Freshcaller
+- Actions are triggered by platform events or automation flows
+
+## Critical Rules - Universal Enforcement
+
+1. **Function Naming:**
+   - ✅ Case-sensitive, alphanumeric + underscores only: `[a-z]`, `[A-Z]`, `[0-9]`, `_`
+   - ✅ Must start with letter (cannot start with number)
+   - ✅ 2-40 characters long
+   - ✅ Cannot contain spaces
+   - ✅ Must match exactly between `actions.json` key and `server.js` function name
+
+2. **Request Schema Constraints (from create_action_guide):**
+   - ❌ NO nested objects in request schema (must be flat)
+   - ❌ NO arrays in request schema
+   - ✅ Construct nested objects/arrays in `server.js` when building request body
+   - ✅ Only single objects supported (no bulk operations in request schema)
+
+3. **Response Schema Guidelines (from create_action_guide):**
+   - ✅ Include only essential fields (IDs required, others optional/nullable)
+   - ✅ Nested objects ARE allowed in response schema
+   - ✅ Pass responses as-is (arrays for lists, objects for single items)
+   - ✅ Additional fields allowed by default (no strict filtering needed)
+
+4. **Error Handling (from actions.md):**
+   - ✅ MUST use `renderData(error, data)` for all responses
+   - ✅ Error object: `{ status: number, message: string }`
+   - ✅ Success: `renderData(null, { data: { response: string, response_variables: object } })`
+   - ✅ Error: `renderData({ status: number, message: string })`
+
+5. **Request Templates:**
+   - ✅ Use `$request.invokeTemplate()` for external API calls
+   - ✅ Define templates in `config/requests.json`
+   - ✅ Declare in `manifest.json` under `modules.common.requests`
+   - ✅ Host must be FQDN only (no path)
+   - ✅ Path must start with `/`
+   - ✅ Use `<%= context.variable %>` for iparams (NOT `{{variable}}`)
+
+## Workflow - Strict Sequential Steps
+
+**CRITICAL: Follow steps in order. Do NOT skip ahead or jump to later steps.**
+
+### Step 1: Understand AI Actions Structure
+
+**From actions.md documentation:**
+
+1. **Actions.json Structure:**
+   ```json
+   {
+     "<functionCallbackName>": {
+       "display_name": "<display name>",
+       "description": "<purpose description>",
+       "parameters": {
+         "$schema": "http://json-schema.org/draft-07/schema#",
+         "type": "object",
+         "properties": {
+           "<input_attribute1>": {
+             "type": "string",
+             "description": "<message string>"
+           }
+         },
+         "required": ["<input_attribute1>"]
+       },
+       "response": {
+         "$schema": "http://json-schema.org/draft-07/schema#",
+         "type": "object",
+         "properties": {
+           "<response_variable1>": {
+             "type": "string",
+             "description": "<message string>"
+           }
+         },
+         "required": ["<response_variable1>"]
+       }
+     }
+   }
+   ```
+
+2. **Server.js Structure:**
+   ```javascript
+   exports = {
+     <functionCallbackName>: function(args) {
+       // args matches parameters object from actions.json
+       // Implementation code
+       
+       // Success response
+       renderData(null, {
+         data: {
+           response: "response string",
+           response_variables: {
+             "variable1": "value1",
+             "variable2": "value2"
+           }
+         }
+       });
+       
+       // Error response
+       renderData({ status: 403, message: "Error message" });
+     }
+   };
+   ```
+
+### Step 2: Gather App Information
+
+**Ask User For:**
+1. **App Description:** Brief description of the app and its purpose
+2. **Module Name:** Product module (`support_ticket`, `deal`, `conversation`, `call`, etc.)
+   - If not provided, ask: "Which Freshworks product module should this app use?"
+   - Options: Freshdesk (`support_ticket`), Freshsales (`deal`), Freshchat (`conversation`), Freshcaller (`call`)
+
+**Do NOT ask for specific actions yet** - that comes in Step 4.
+
+### Step 3: Create App Structure
+
+**CRITICAL: Create complete folder structure with all required files.**
+
+1. **Create App Directory:**
+   - Create new folder: `<app_name>/` in parent directory
+   - NEVER scatter files in workspace root
+
+2. **Create `manifest.json`:**
+   ```json
+   {
+     "platform-version": "3.0",
+     "modules": {
+       "common": {
+         "functions": {},
+         "requests": {}
+       },
+       "<module_name>": {}
+     },
+     "engines": {
+       "node": "18.20.8",
+       "fdk": "9.7.4"
+     }
+   }
+   ```
+
+3. **Create `config/iparams.json`:**
+   ```json
+   {}
+   ```
+   - Start empty, add iparams as needed for authentication
+
+4. **Create `server/server.js`:**
+   ```javascript
+   // Error handler - MUST be included
+   const __formatError = (error, functionName) => {
+     console.error(`[${functionName}] Error:`, error);
+     let message;
+     try {
+       message = error.response ? JSON.parse(error.response) : error.message;
+     } catch {
+       message = error.response || error.message || "Unknown error";
+     }
+     const parsedMessage = message instanceof Object ? JSON.stringify(message) : message;
+     return { status: error.status || 500, message: parsedMessage };
+   };
+
+   exports = {
+     // Actions will be added here iteratively
+   };
+   ```
+
+5. **Create `actions.json` at app root:**
+   ```json
+   {}
+   ```
+   - Start empty, actions added iteratively in Step 4
+   - **CRITICAL:** Must be at `<app_root>/actions.json`, NOT in config folder
+
+6. **Create `README.md`:**
+   - Basic app description
+   - Will be updated in Step 6
+
+### Step 4: Add Actions Iteratively
+
+**CRITICAL: Add ONE action at a time. Complete each action fully before moving to the next.**
+
+**Work Loop:** For each action:
+
+#### 4.1: Gather Action Details
+
+**Ask User For:**
+- cURL request example, OR
+- API endpoint URL + required fields, OR
+- API documentation link
+
+**If details insufficient:**
+- Search web for latest API documentation
+- Ask clarifying questions about required fields
+
+#### 4.2: Determine Authentication Method
+
+**Common Options:**
+- API Key in iparams (most common)
+- OAuth (if required by external service like GitHub, Jira)
+- Basic Auth
+- Bearer Token
+
+**Update `config/iparams.json`** if new auth parameters needed:
+```json
+{
+  "api_key": {
+    "display_name": "API Key",
+    "description": "Your API key",
+    "type": "text",
+    "required": true,
+    "secure": true
+  }
+}
+```
+
+#### 4.3: Define Request Schema in `actions.json`
+
+**CRITICAL Constraints:**
+- ✅ **Flat structure only** - NO nested objects in properties
+- ✅ **NO arrays** in request schema properties
+- ✅ Fields required by other actions must be included
+- ✅ Construct nested objects/arrays in `server.js` if API requires them
+
+**Example Request Schema:**
+```json
+{
+  "createTicket": {
+    "display_name": "Create Support Ticket",
+    "description": "Creates a new support ticket",
+    "parameters": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "Ticket subject"
+        },
+        "description": {
+          "type": "string",
+          "description": "Ticket description"
+        },
+        "priority": {
+          "type": "number",
+          "description": "Priority level (1-4)"
+        }
+      },
+      "required": ["subject", "description"]
+    },
+    "response": {
+      // Defined in Step 4.5
+    }
+  }
+}
+```
+
+**Note:** If API requires nested structure like `{ ticket: { subject: "...", metadata: {...} } }`, define flat fields (`subject`, `description`, etc.) and construct the nested object in `server.js`.
+
+#### 4.4: Create Request Template (if external API)
+
+1. **Add to `config/requests.json`:**
+   ```json
+   {
+     "createTicketRequest": {
+       "schema": {
+         "method": "POST",
+         "host": "api.example.com",
+         "path": "/tickets",
+         "headers": {
+           "Authorization": "Bearer <%= context.api_key %>",
+           "Content-Type": "application/json"
+         }
+       }
+     }
+   }
+   ```
+
+2. **Declare in `manifest.json`:**
+   ```json
+   {
+     "modules": {
+       "common": {
+         "requests": {
+           "createTicketRequest": {}
+         }
+       }
+     }
+   }
+   ```
+
+**CRITICAL:**
+- ✅ Host must be FQDN only (no path): `api.example.com` ✅, `api.example.com/api` ❌
+- ✅ Path must start with `/`: `/tickets` ✅, `tickets` ❌
+- ✅ Use `<%= context.variable %>` for iparams (NOT `{{variable}}`)
+- ✅ Use `<%= iparam.name %>` for app-specific iparams
+
+#### 4.5: Implement SMI Function in `server.js`
+
+**Function Structure (from actions.md):**
+```javascript
+exports = {
+  createTicket: async function(args) {
+    try {
+      // args contains fields from parameters object in actions.json
+      // args.iparams contains installation parameters
+      
+      // Build request body (construct nested objects/arrays here if needed)
+      const requestBody = {
+        ticket: {
+          subject: args.subject,
+          description: args.description,
+          priority: args.priority,
+          metadata: {
+            source: "ai_action",
+            tags: ["automated"] // Array constructed here
+          }
+        }
+      };
+
+      // Call external API via request template
+      const response = await $request.invokeTemplate('createTicketRequest', {
+        context: {
+          api_key: args.iparams.api_key
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      // Parse response
+      const responseData = JSON.parse(response.response);
+
+      // Return success using renderData(null, data)
+      renderData(null, {
+        data: {
+          response: JSON.stringify(responseData),
+          response_variables: {
+            ticket_id: responseData.ticket.id,
+            status: responseData.ticket.status
+          }
+        }
+      });
+    } catch (error) {
+      // Use error handler
+      const formattedError = __formatError(error, 'createTicket');
+      renderData(formattedError);
+    }
+  }
+};
+```
+
+**CRITICAL (from actions.md):**
+- ✅ Function name MUST match `actions.json` key exactly (case-sensitive)
+- ✅ Use `renderData(null, { data: { response, response_variables } })` for success
+- ✅ Use `renderData({ status, message })` for errors
+- ✅ `response` in data object is a string (JSON.stringify if needed)
+- ✅ `response_variables` is an object with key-value pairs
+- ✅ Construct nested objects/arrays in `server.js` (not in request schema)
+- ✅ Use `$request.invokeTemplate()` for external APIs
+
+#### 4.6: Define Response Schema
+
+**Ask User For:**
+- Sample API response (JSON)
+
+**Response Schema Guidelines:**
+- ✅ Include only **essential fields** (IDs required, others optional/nullable)
+- ✅ **Nested objects ARE allowed** in response schema
+- ✅ Pass responses as-is (arrays for lists, objects for single items)
+- ✅ Additional fields allowed by default
+
+**Example Response Schema:**
+```json
+{
+  "response": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "ticket_id": {
+        "type": "string",
+        "description": "Created ticket ID"
+      },
+      "status": {
+        "type": "string",
+        "description": "Ticket status"
+      },
+      "ticket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": ["ticket_id"]
+  }
+}
+```
+
+**Complete Action in actions.json:**
+```json
+{
+  "createTicket": {
+    "display_name": "Create Support Ticket",
+    "description": "Creates a new support ticket",
+    "parameters": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "Ticket subject"
+        },
+        "description": {
+          "type": "string",
+          "description": "Ticket description"
+        },
+        "priority": {
+          "type": "number",
+          "description": "Priority level (1-4)"
+        }
+      },
+      "required": ["subject", "description"]
+    },
+    "response": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "ticket_id": {
+          "type": "string",
+          "description": "Created ticket ID"
+        },
+        "status": {
+          "type": "string",
+          "description": "Ticket status"
+        }
+      },
+      "required": ["ticket_id"]
+    }
+  }
+}
+```
+
+#### 4.7: Declare Function in Manifest
+
+**Update `manifest.json`:**
+```json
+{
+  "modules": {
+    "common": {
+      "functions": {
+        "createTicket": {}
+      }
+    }
+  }
+}
+```
+
+**CRITICAL:** Function name must match exactly between:
+- `actions.json` key
+- `server.js` function name
+- `manifest.json` function declaration
+
+#### 4.8: Iterate or Test
+
+**Ask User:**
+- "Would you like to test this action, or add another action?"
+
+**If testing (from actions.md):**
+1. Run `fdk run` in app directory
+2. Open browser: `https://localhost:10001/web/test`
+3. Select type: `actions`
+4. Select action: `createTicket` (or your action name)
+5. Edit payload if needed
+6. Click **Simulate**
+   - Success: Simulation worked
+   - Failed: Fix payload and retry
+
+**If adding another:**
+- Return to Step 4.1 for next action
+
+### Step 5: Validate & Fix (Automatic)
+
+**CRITICAL: Follow validation workflow from `validation-autofix.mdc`**
+
+1. **Run `fdk validate` automatically** (DO NOT ask user)
+2. **Filter output:** Ignore lint errors/warnings, only process fatal errors
+3. **Auto-Fix Iteration 1 (Fatal Errors Only):**
+   - Fix JSON structure errors in `actions.json`
+   - Fix manifest declarations
+   - Fix request template issues (FQDN, path)
+   - Fix function name mismatches
+   - Re-run `fdk validate`
+4. **Auto-Fix Iteration 2 (if still failing):**
+   - Fix remaining fatal errors
+   - Re-run `fdk validate`
+5. **After 2 Iterations:**
+   - ✅ If fatal errors resolved → Continue to Step 6
+   - ⚠️ If fatal errors persist → Present errors with fix directions
+
+**What to FIX:**
+- ✅ JSON parsing errors in `actions.json`
+- ✅ Missing function declarations in manifest
+- ✅ Missing request template declarations
+- ✅ Request template errors (FQDN, path, schema)
+- ✅ Function name mismatches between `actions.json` and `server.js`
+
+**What to IGNORE:**
+- ❌ Lint errors (async without await, unused parameters)
+- ❌ Warnings (non-critical issues)
+
+### Step 6: Documentation
+
+**Update `README.md` with:**
+
+```markdown
+# <App Name>
+
+<App description>
+
+## Actions
+
+### createTicket
+- **Display Name:** Create Support Ticket
+- **Description:** Creates a new support ticket
+- **Input Parameters:**
+  - `subject` (string, required): Ticket subject
+  - `description` (string, required): Ticket description
+  - `priority` (number, optional): Priority level (1-4)
+- **Output Variables:**
+  - `ticket_id` (string): Created ticket ID
+  - `status` (string): Ticket status
+
+## Setup
+
+1. Install dependencies: `npm install` (if any)
+2. Configure iparams in `config/iparams.json`
+3. Run: `fdk run`
+4. Test actions at: `https://localhost:10001/web/test`
+   - Select type: `actions`
+   - Select action and simulate
+
+## Usage
+
+Actions can be used in:
+- Automation flows
+- Workflow automator
+- AI assistants
+- Platform events
+
+Each action is invoked by its function name (e.g., `createTicket`).
+```
+
+## Best Practices
+
+### Code Quality
+- ✅ Follow Freshworks Platform 3.0 coding standards
+- ✅ Use consistent error handling with `__formatError`
+- ✅ Use request templates over axios/third-party libraries
+- ✅ Keep functions focused and single-purpose
+- ✅ Use async/await properly (must have await if async)
+
+### Schema Design
+- ✅ Keep request schemas flat (no nesting in properties)
+- ✅ Include only essential response fields
+- ✅ Make response fields optional except IDs
+- ✅ Support nested objects in response schemas
+- ✅ Construct nested request structures in `server.js`
+
+### Function Naming
+- ✅ Use descriptive, clear names
+- ✅ Follow naming constraints (2-40 chars, alphanumeric + underscore)
+- ✅ Ensure exact match between `actions.json` and `server.js`
+- ✅ Use consistent naming convention across actions
+
+### Error Handling
+- ✅ Always use `renderData()` for responses
+- ✅ Use `__formatError` helper for consistent error formatting
+- ✅ Return proper error objects: `{ status: number, message: string }`
+- ✅ Log errors with function name for debugging
+
+## Common Patterns
+
+### Pattern 1: Simple GET Request
+```javascript
+exports = {
+  getTicket: async function(args) {
+    try {
+      const response = await $request.invokeTemplate('getTicketRequest', {
+        context: {
+          ticket_id: args.ticket_id,
+          api_key: args.iparams.api_key
+        }
+      });
+      
+      const data = JSON.parse(response.response);
+      renderData(null, {
+        data: {
+          response: JSON.stringify(data),
+          response_variables: {
+            ticket_id: data.ticket.id,
+            status: data.ticket.status
+          }
+        }
+      });
+    } catch (error) {
+      renderData(__formatError(error, 'getTicket'));
+    }
+  }
+};
+```
+
+### Pattern 2: POST with Nested Body
+```javascript
+exports = {
+  createResource: async function(args) {
+    try {
+      // Construct nested object in server.js (not in request schema)
+      const requestBody = {
+        resource: {
+          name: args.name,
+          metadata: {
+            source: args.source,
+            tags: [args.tag1, args.tag2] // Array constructed here
+          }
+        }
+      };
+
+      const response = await $request.invokeTemplate('createResourceRequest', {
+        context: {
+          api_key: args.iparams.api_key
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = JSON.parse(response.response);
+      renderData(null, {
+        data: {
+          response: JSON.stringify(data),
+          response_variables: {
+            resource_id: data.resource.id
+          }
+        }
+      });
+    } catch (error) {
+      renderData(__formatError(error, 'createResource'));
+    }
+  }
+};
+```
+
+### Pattern 3: Error Handling
+```javascript
+exports = {
+  actionName: async function(args) {
+    try {
+      // Action logic
+      renderData(null, {
+        data: {
+          response: "Success",
+          response_variables: {}
+        }
+      });
+    } catch (error) {
+      // Always use __formatError helper
+      const formattedError = __formatError(error, 'actionName');
+      renderData(formattedError);
+    }
+  }
+};
+```
+
+### Pattern 4: Using Freshworks Platform APIs
+```javascript
+exports = {
+  createTicket: async function(args) {
+    try {
+      // Use Freshworks Platform API directly
+      const ticketData = {
+        subject: args.subject,
+        description: args.description,
+        priority: args.priority
+      };
+
+      const response = await $request.invokeTemplate('freshdeskCreateTicket', {
+        context: {
+          domain: args.iparams.domain,
+          api_key: args.iparams.api_key
+        },
+        body: JSON.stringify(ticketData)
+      });
+
+      const ticket = JSON.parse(response.response);
+      renderData(null, {
+        data: {
+          response: JSON.stringify(ticket),
+          response_variables: {
+            ticket_id: ticket.id.toString(),
+            status: ticket.status_name
+          }
+        }
+      });
+    } catch (error) {
+      renderData(__formatError(error, 'createTicket'));
+    }
+  }
+};
+```
+
+## Validation Checklist
+
+Before finalizing, verify:
+
+- [ ] `actions.json` is at app root (not in config folder)
+- [ ] All actions declared in `manifest.json` under `modules.common.functions`
+- [ ] All request templates declared in `manifest.json` under `modules.common.requests`
+- [ ] Function names match exactly between `actions.json` and `server.js` (case-sensitive)
+- [ ] Request schemas are flat (no nested objects/arrays in properties)
+- [ ] Response schemas include only essential fields
+- [ ] All functions use `renderData()` for responses
+- [ ] Error handling uses `__formatError` helper
+- [ ] Request templates use FQDN hosts and `/`-prefixed paths
+- [ ] `fdk validate` passes (fatal errors only)
+
+## Testing
+
+**From actions.md documentation:**
+
+1. Use latest Chrome browser
+2. Ensure sample payload JSON files are in `<app_root>/server/test_data` (optional)
+3. Run `fdk run` in app directory
+4. Open `https://localhost:10001/web/test`
+5. Select type: `actions`
+6. Select action from dropdown
+7. Edit payload if needed
+8. Click **Simulate**
+   - Success: Action worked
+   - Failed: Fix payload/implementation and retry
+
+## Reference
+
+- **Actions Documentation:** `references/ai_actions/actions.md`
+- **Validation Workflow:** `validation-autofix.mdc`
+- **Platform 3.0 Patterns:** `SKILL.md`

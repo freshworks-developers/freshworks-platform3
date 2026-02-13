@@ -1,0 +1,16 @@
+{
+  "platform-version": "3.0",
+  "modules": {
+    "common": {
+      "requests": {
+        "graphApiGet": {},
+        "graphApiPatch": {}
+      }
+    },
+    "support_ticket": {}
+  },
+  "engines": {
+    "node": "18.20.8",
+    "fdk": "9.7.4"
+  }
+}
