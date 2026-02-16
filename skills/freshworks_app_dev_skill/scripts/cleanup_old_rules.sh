@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Cleanup Old Rules Script
-# Removes residual Freshworks Platform 3.0 rules from a project
+# Removes Freshworks Platform 3.0 rules from a project (only these - never other rules).
+# Run before reinstalling the skill to get a clean slate.
 
 set -e
 
@@ -34,16 +35,18 @@ cleanup_rules() {
     if [ -d "$rules_dir" ]; then
         echo -e "${YELLOW}🔍 Checking $rules_label...${NC}"
         
-        # Count existing rules
-        local count=$(find "$rules_dir" -name "freshworks*.mdc" -o -name "app-templates.mdc" -o -name "platform3-modules-locations.mdc" 2>/dev/null | wc -l | tr -d ' ')
+        # Count existing Freshworks rules (only these - never touch other project rules)
+        local count=$(find "$rules_dir" -maxdepth 1 \( -name "freshworks*.mdc" -o -name "app-templates.mdc" -o -name "platform3-modules-locations.mdc" -o -name "validation-autofix.mdc" -o -name "validation-workflow.mdc" \) 2>/dev/null | wc -l | tr -d ' ')
         
         if [ "$count" -gt 0 ]; then
-            echo -e "${RED}   Found $count old rule(s)${NC}"
+            echo -e "${RED}   Found $count Freshworks rule(s)${NC}"
             
-            # Remove old rules
+            # Remove only Freshworks rules (never other rules)
             rm -f "$rules_dir"/freshworks*.mdc
             rm -f "$rules_dir"/app-templates.mdc
             rm -f "$rules_dir"/platform3-modules-locations.mdc
+            rm -f "$rules_dir"/validation-autofix.mdc
+            rm -f "$rules_dir"/validation-workflow.mdc
             
             echo -e "${GREEN}   ✓ Removed old rules${NC}"
         else

@@ -1,0 +1,8 @@
+{
+  "repo_name": {
+    "display_name": "Repository Name",
+    "description": "GitHub repository name (e.g., owner/repo)",
+    "type": "text",
+    "required": true
+  }
+}

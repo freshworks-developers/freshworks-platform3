@@ -1,4 +1,5 @@
 ---
+name: validation-workflow
 description: Automatic validation and autofix workflow for Freshworks Platform 3.0 apps
 alwaysApply: true
 ---
@@ -45,8 +46,12 @@ fdk validate
 - Fix comma placement (missing commas → add, trailing commas → remove)
 - Fix template syntax (`{{variable}}` → `<%= context.variable %>`)
 - Create missing mandatory files (`icon.svg`, `iparams.json`)
+- Create missing mandatory folders (`app/` for frontend apps)
 - Fix FQDN issues (host with path → FQDN only)
 - Fix path issues (missing `/` → add `/` prefix)
+- Remove `body` from request template schemas (body goes in invocation)
+- Add `engines` block if missing (node: "18.20.8", fdk: "9.7.4")
+- Remove empty location objects OR add location definition
 - Re-run `fdk validate`
 
 **Iteration 2 - Advanced Fatal Fixes (if still failing):**

@@ -155,7 +155,7 @@ fdk validate
 1. ✅ MUST be a single top-level JSON object `{ ... }`
 2. ✅ All iparams MUST be properties of this object
 3. ✅ Use commas to separate multiple iparams
-4. ❌ NEVER have multiple `{ ... }` blocks at top level
+4. ❌ NEVER have multiple top-level objects
 5. ❌ NEVER have trailing commas after last property
 
 **For config/oauth_config.json:**

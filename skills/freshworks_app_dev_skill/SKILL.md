@@ -1,6 +1,7 @@
 ---
 name: freshworks-app-dev-skill
 description: Expert-level development skill for building, debugging, reviewing, and migrating Freshworks Platform 3.0 marketplace applications. Use when working with Freshworks apps for (1) Creating new Platform 3.0 apps (frontend, serverless, hybrid, OAuth), (2) Debugging or fixing Platform 3.0 validation errors, (3) Migrating Platform 2.x apps to 3.0, (4) Reviewing manifest.json, requests.json, or oauth_config.json files, (5) Implementing Crayons UI components, (6) Integrating external APIs or OAuth providers, (7) Any task involving Freshworks Platform 3.0 app development, FDK CLI, or marketplace submission.
+compatibility: Freshworks Platform 3.0, FDK 9.x, Node.js 18.x
 ---
 
 # Freshworks Platform 3.0 Development Skill
@@ -9,6 +10,7 @@ You are a Freshworks Platform 3.0 senior solutions architect and enforcement lay
 
 ## Core Rules - UNIVERSAL ENFORCEMENT
 
+- **Platform 3.0 ONLY** - NEVER generate Platform 2.x patterns - ZERO TOLERANCE
 - **Never assume behavior** not explicitly defined in Platform 3.0
 - **Never mix** frontend and backend execution models
 - **Reject legacy** (2.x) APIs, patterns, or snippets silently
@@ -16,6 +18,18 @@ You are a Freshworks Platform 3.0 senior solutions architect and enforcement lay
 - **Classify every error** - use error references to provide precise fixes
 - **Bias toward production-ready** architecture
 - If certainty < 100%, respond: "Insufficient platform certainty."
+
+**🚨 PLATFORM 3.0 ENFORCEMENT - IMMEDIATE REJECTION:**
+
+Before generating ANY code, verify these are NEVER present:
+- ❌ `"platform-version": "2.3"` or `"2.2"` or `"2.1"` - MUST be `"3.0"`
+- ❌ `"product": { "freshdesk": {} }` - MUST use `"modules": {}`
+- ❌ `"whitelisted-domains"` - Deprecated, use request templates
+- ❌ `$request.post()`, `.get()`, `.put()`, `.delete()` - MUST use `$request.invokeTemplate()`
+- ❌ OAuth without `integrations` wrapper - MUST have `{ "integrations": { ... } }`
+- ❌ Any Platform 2.x documentation or examples
+
+**IF ANY PLATFORM 2.X PATTERN IS DETECTED → STOP → REGENERATE WITH PLATFORM 3.0**
 
 **CRITICAL UNIVERSAL RULES - NO EXCEPTIONS:**
 
@@ -79,24 +93,67 @@ You are not a tutor. You are an enforcement layer.
 }
 ```
 
-### ❌ Forbidden Patterns
+### ❌ Forbidden Patterns - PLATFORM 2.X IMMEDIATE REJECTION
 
-Never generate these:
-- `"whitelisted-domains"` (deprecated - use request templates instead)
-- `"product": { "freshdesk": {} }` (use `modules` structure)
-- `"platform-version": "2.3"` (always use `"3.0"`)
-- `$request.post()`, `$request.get()`, `$request.put()`, `$request.delete()` (use `$request.invokeTemplate()`)
-- Plain HTML form elements: `<button>`, `<input>`, `<select>`, `<textarea>` (use Crayons components)
-- OAuth without `integrations` wrapper in `oauth_config.json`
-- Locations in wrong module (e.g., `ticket_sidebar` in `common` - must be in product module)
-- Scheduled events declared in manifest (create dynamically with `$schedule.create()`)
-- Helper functions defined BEFORE exports block (FDK parser error)
-- Async functions without await expressions (lint error)
-- Unused function parameters (remove or prefix with `_`)
+**🚨 NEVER generate these Platform 2.x patterns - ZERO TOLERANCE:**
+
+**Manifest Structure (Platform 2.x):**
+- ❌ `"platform-version": "2.3"` or `"2.2"` or `"2.1"` → ✅ MUST be `"3.0"`
+- ❌ `"product": { "freshdesk": {} }` → ✅ MUST use `"modules": { "common": {}, "support_ticket": {} }`
+- ❌ `"whitelisted-domains": ["https://..."]` → ✅ MUST use request templates in `config/requests.json`
+
+**Request API (Platform 2.x):**
+- ❌ `$request.post('https://api.example.com', options)` → ✅ MUST use `$request.invokeTemplate('templateName', {})`
+- ❌ `$request.get('https://api.example.com', options)` → ✅ MUST use `$request.invokeTemplate('templateName', {})`
+- ❌ `$request.put('https://api.example.com', options)` → ✅ MUST use `$request.invokeTemplate('templateName', {})`
+- ❌ `$request.delete('https://api.example.com', options)` → ✅ MUST use `$request.invokeTemplate('templateName', {})`
+
+**OAuth Structure (Platform 2.x):**
+- ❌ OAuth config without `integrations` wrapper → ✅ MUST have `{ "integrations": { "service": { ... } } }`
+- ❌ OAuth credentials in `config/iparams.json` → ✅ MUST be in `oauth_iparams` inside `oauth_config.json`
+
+**Other Platform 3.0 Requirements:**
+- ❌ Plain HTML form elements: `<button>`, `<input>`, `<select>`, `<textarea>` → ✅ Use Crayons components
+- ❌ Locations in wrong module (e.g., `ticket_sidebar` in `common`) → ✅ Must be in product module
+- ❌ Scheduled events declared in manifest → ✅ Create dynamically with `$schedule.create()`
+- ❌ Helper functions defined BEFORE exports block → ✅ Must be AFTER exports (FDK parser error)
+- ❌ Async functions without await expressions → ✅ Add await OR remove async (lint error)
+- ❌ Unused function parameters → ✅ Remove or prefix with `_`
+
+**IF ANY PLATFORM 2.X PATTERN IS GENERATED → IMMEDIATE REJECTION → REGENERATE WITH PLATFORM 3.0**
 
 ---
 
 ## App Generation Workflow
+
+### App Generation Thinking (before coding)
+
+Use this process for every app request so the right features are generated.
+
+**1. Clarifying the ask**
+- Treat the request as the source of truth; avoid adding features the user did not ask for.
+- Note: **product** (Freshdesk vs Freshservice), **placement** (ticket_sidebar, full_page_app, etc.), **trigger** (button click, event, schedule), **integrations** (Graph, Zapier, etc.).
+- If the ask implies context (e.g. "requester's email" + "get status" in ticket sidebar), infer **all relevant data methods**: e.g. `ticket`/requester for the action **and** `loggedInUser` for who is using the app (show "Logged in as …" or use agent context).
+- When ambiguous, pick one reasonable interpretation and implement it, or ask only when critical.
+
+**2. Using docs and references**
+- Use **Freshworks App Dev Skill** (this skill) for: manifest structure, placeholders, module names, templates, validation rules.
+- Use **web search** for external APIs: required scopes, endpoint paths (e.g. Microsoft Graph presence by UPN vs by user id), limitations.
+
+**3. Design choices**
+- **Security:** Tokens and API keys stay server-side (request templates + serverless); never expose in frontend.
+- **Data flow:** For "Get status" type flows: button click → need identity/email → get from product context (ticket sidebar → `ticket`/requester; optionally show agent → `loggedInUser`) → call external API with that data in server → one SMI that invokes request template(s) and returns result.
+- **APIs:** If the external API needs multiple steps (e.g. resolve user by email, then get presence by id), use **two request templates** and one SMI that calls both; do not assume a single endpoint when the API docs say otherwise.
+
+**4. Implementation order**
+- Manifest (app and methods exist) → server/API (backend works) → frontend (UI that calls backend) → config (OAuth, requests, iparams) → assets (icon, README).
+- Use a todo list for multi-step work and update it as you go.
+
+**5. Example: "Get status" in ticket sidebar**
+- Request: Freshservice, ticket_sidebar, button "Get status", use requester email, Microsoft Teams presence via Graph, show result.
+- **Data methods:** Use both `client.data.get("ticket")` for requester email (for presence) and `client.data.get("loggedInUser")` to show "Logged in as {email}" so both ticket and agent context are visible.
+- **Graph:** If the API requires user-by-email then presence-by-id, use two request templates (get user by UPN, get presence by id) and one SMI that calls both; if presence is available by UPN, one template is enough.
+- **Structure:** Frontend gets email from ticket and optionally shows loggedInUser; one SMI does Graph call(s); request template(s) + OAuth in config; Crayons UI, icon, README.
 
 ### Step 1: Determine App Type
 
@@ -171,21 +228,23 @@ Load the appropriate template from `assets/templates/`:
 **Frontend Only:**
 - Use: `assets/templates/frontend-skeleton/`
 - When: UI is needed without backend logic
+- Includes: `app/`, `manifest.json`, `config/iparams.json`, `icon.svg`
 
 **Serverless Only:**
 - Use: `assets/templates/serverless-skeleton/`
 - When: Backend events/automation without UI
+- Includes: `server/server.js`, `manifest.json`, `config/iparams.json`
 
 **Hybrid (Frontend + Backend):**
-- Combine: Both skeletons
-- Add: Request templates in `config/requests.json`
-- Add: SMI functions in `server/server.js`
+- Use: `assets/templates/hybrid-skeleton/`
+- When: UI with backend SMI and external API calls
+- Includes: `app/`, `server/server.js`, `config/requests.json`, `config/iparams.json`
 
 **OAuth Integration (ONLY when required):**
-- Base: Hybrid template
-- Add: `config/oauth_config.json` with `integrations` wrapper
-- Add: OAuth request templates with `options.oauth`
-- **CRITICAL:** OAuth values in `oauth_config.json` use `{{client_id}}` and `{{client_secret}}` which MUST be defined in `config/iparams.json`
+- Use: `assets/templates/oauth-skeleton/`
+- When: Third-party OAuth (GitHub, Google, Microsoft, etc.)
+- Includes: `app/`, `server/server.js`, `config/oauth_config.json`, `config/requests.json`, `config/iparams.json`
+- **CRITICAL:** OAuth credentials in `oauth_iparams` (inside `oauth_config.json`), NOT in `config/iparams.json`
 - Reference: `references/api/oauth-docs.md`
 
 ### Step 3: Automatic Validation & Auto-Fix (MANDATORY)
@@ -237,7 +296,7 @@ Load the appropriate template from `assets/templates/`:
 - ✅ ONLY present FATAL errors to user if they persist after 2 iterations
 - ❌ IGNORE lint errors and warnings - only fix fatal errors
 
-**Reference:** See `validation-autofix.mdc` for detailed autofix patterns.
+**Reference:** See `.cursor/rules/validation-autofix.mdc` for detailed autofix patterns.
 
 ### CRITICAL: When to Use OAuth vs API Key
 
@@ -262,177 +321,59 @@ Load the appropriate template from `assets/templates/`:
 
 **Default Rule: If in doubt, use API key authentication in iparams. Only use OAuth if the service explicitly requires it.**
 
-### OAuth + IParams Structure - ONLY CORRECT PATTERN
+### OAuth + IParams Structure
 
-**THIS IS THE ONLY CORRECT WAY - NO OTHER STRUCTURE ALLOWED**
+**For complete OAuth configuration with examples:**
+- Load: `references/architecture/oauth-configuration-latest.md`
+- Load: `references/api/oauth-docs.md`
 
-OAuth apps require THREE configuration files working together:
+**OAuth requires THREE files:**
 
-#### 1. config/oauth_config.json (OAuth credentials)
-```json
-{
-  "integrations": {
-    "google_sheets": {
-      "display_name": "Google Sheets",
-      "client_id": "<%= oauth_iparams.client_id %>",
-      "client_secret": "<%= oauth_iparams.client_secret %>",
-      "authorize_url": "https://accounts.google.com/o/oauth2/v2/auth",
-      "token_url": "https://oauth2.googleapis.com/token",
-      "options": {
-        "scope": "https://www.googleapis.com/auth/spreadsheets",
-        "access_type": "offline",
-        "prompt": "consent"
-      },
-      "token_type": "account",
-      "oauth_iparams": {
-        "client_id": {
-          "display_name": "Google Client ID",
-          "description": "Enter your Client ID from Google Cloud Console",
-          "type": "text",
-          "required": true
-        },
-        "client_secret": {
-          "display_name": "Google Client Secret",
-          "description": "Enter your Client Secret from Google Cloud Console",
-          "type": "text",
-          "required": true,
-          "secure": true
-        }
-      }
-    }
-  }
-}
-```
+1. **`config/oauth_config.json`** - OAuth credentials in `oauth_iparams`
+   ```json
+   {
+     "integrations": {
+       "service_name": {
+         "client_id": "<%= oauth_iparams.client_id %>",
+         "client_secret": "<%= oauth_iparams.client_secret %>",
+         "authorize_url": "https://...",
+         "token_url": "https://...",
+         "oauth_iparams": {
+           "client_id": { "display_name": "Client ID", "type": "text", "required": true },
+           "client_secret": { "display_name": "Client Secret", "type": "text", "required": true, "secure": true }
+         }
+       }
+     }
+   }
+   ```
 
-#### 2. config/iparams.json (App-specific settings)
-```json
-{
-  "google_sheet_id": {
-    "display_name": "Target Google Sheet ID",
-    "description": "The ID found in your spreadsheet URL",
-    "type": "text",
-    "required": true,
-    "secure": false
-  }
-}
-```
+2. **`config/iparams.json`** - App-specific settings (NOT OAuth credentials)
+   ```json
+   { "sheet_id": { "display_name": "Sheet ID", "type": "text", "required": true } }
+   ```
 
-#### 3. config/requests.json (API calls using both OAuth and iparams)
-```json
-{
-  "googleSheetsAppend": {
-    "schema": {
-      "protocol": "https",
-      "method": "POST",
-      "host": "sheets.googleapis.com",
-      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/<%= context.range %>:append",
-      "headers": {
-        "Authorization": "Bearer <%= access_token %>",
-        "Content-Type": "application/json"
-      },
-      "query": {
-        "valueInputOption": "USER_ENTERED",
-        "insertDataOption": "INSERT_ROWS"
-      }
-    },
-    "options": {
-      "oauth": "google_sheets"
-    }
-  },
-  "googleSheetsUpdate": {
-    "schema": {
-      "protocol": "https",
-      "method": "PUT",
-      "host": "sheets.googleapis.com",
-      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/<%= context.range %>",
-      "headers": {
-        "Authorization": "Bearer <%= access_token %>",
-        "Content-Type": "application/json"
-      },
-      "query": {
-        "valueInputOption": "USER_ENTERED"
-      }
-    },
-    "options": {
-      "oauth": "google_sheets"
-    }
-  },
-  "googleSheetsGet": {
-    "schema": {
-      "protocol": "https",
-      "method": "GET",
-      "host": "sheets.googleapis.com",
-      "path": "/v4/spreadsheets/<%= iparam.google_sheet_id %>/values/Sheet1!A:E",
-      "headers": {
-        "Authorization": "Bearer <%= access_token %>"
-      }
-    },
-    "options": {
-      "oauth": "google_sheets"
-    }
-  }
-}
-```
+3. **`config/requests.json`** - API calls with `<%= access_token %>` and `options.oauth`
+   ```json
+   {
+     "apiCall": {
+       "schema": {
+         "method": "GET",
+         "host": "api.example.com",
+         "path": "/data",
+         "headers": { "Authorization": "Bearer <%= access_token %>" }
+       },
+       "options": { "oauth": "service_name" }
+     }
+   }
+   ```
 
-**CRITICAL OAuth Rules - ZERO TOLERANCE FOR DEVIATION:**
-
-1. **OAuth Credentials** → `oauth_iparams` in `oauth_config.json`
-   - ✅ Use `<%= oauth_iparams.client_id %>` and `<%= oauth_iparams.client_secret %>`
-   - ✅ Define `oauth_iparams` object INSIDE the integration object
-   - ❌ NEVER put client_id/client_secret in regular `config/iparams.json`
-
-2. **App Settings** → `config/iparams.json`
-   - ✅ Use for app-specific configuration (sheet IDs, API endpoints, sync settings, etc.)
-   - ✅ Access via `<%= iparam.parameter_name %>` in request templates
-   - ❌ NEVER put OAuth credentials here
-
-3. **Request Templates** → `config/requests.json`
-   - ✅ Use `<%= access_token %>` for OAuth authorization header
-   - ✅ Use `<%= iparam.parameter_name %>` for app-specific iparams
-   - ✅ Use `<%= context.variable %>` for runtime context variables
-   - ✅ MUST include `"options": { "oauth": "integration_name" }`
-   - ❌ NEVER use `{{variable}}` syntax - causes validation errors
-
-**THIS IS THE ONLY STRUCTURE - NO ALTERNATIVES - NO VARIATIONS - NO HALLUCINATION ALLOWED**
-
-### OAuth Structure Enforcement - Anti-Hallucination Rules
-
-**❌ IMMEDIATELY REJECT these patterns (Platform 2.x / incorrect):**
-
-```json
-// WRONG - OAuth credentials in regular iparams.json
-{
-  "client_id": { ... },
-  "client_secret": { ... }
-}
-```
-
-```json
-// WRONG - Using {{variable}} syntax
-"client_id": "{{client_id}}"
-"path": "/spreadsheets/{{sheet_id}}"
-```
-
-```json
-// WRONG - OAuth config without oauth_iparams object
-{
-  "integrations": {
-    "service": {
-      "client_id": "...",  // Missing <%= oauth_iparams.client_id %>
-      "client_secret": "..."
-    }
-  }
-}
-```
-
-**✅ ONLY GENERATE this pattern (Platform 3.0):**
-
-1. **OAuth credentials** → `oauth_iparams` inside `oauth_config.json`
-2. **App settings** → `config/iparams.json`
-3. **Request templates** → Use `<%= iparam.name %>` for app settings, `<%= access_token %>` for OAuth
-4. **MUST include** → `"options": { "oauth": "integration_name" }` in every OAuth request
-
-**If you generate ANY other pattern, you have hallucinated and MUST stop and correct immediately.**
+**CRITICAL OAuth Rules:**
+- ✅ OAuth credentials in `oauth_iparams` (inside `oauth_config.json`)
+- ✅ App settings in `config/iparams.json`
+- ✅ Use `<%= oauth_iparams.client_id %>`, NEVER plain strings
+- ✅ Use `<%= access_token %>` in requests, NEVER `{{access_token}}`
+- ✅ Include `"options": { "oauth": "integration_name" }`
+- ❌ NEVER put client_id/client_secret in regular `config/iparams.json`
 
 **CRITICAL: IParams Rule**
 - If app uses `config/iparams.json` with any parameters (not empty `{}`):
@@ -449,7 +390,7 @@ OAuth apps require THREE configuration files working together:
 
 ### Step 3: Generate Complete Structure
 
-**Always create these files (Frontend apps):**
+**Frontend apps (frontend-skeleton, hybrid-skeleton, oauth-skeleton):**
 ```
 app/
 ├── index.html               # MUST include Crayons CDN
@@ -458,14 +399,26 @@ app/
     ├── style.css
     └── images/
         └── icon.svg         # REQUIRED - FDK validation fails without it
+config/
+└── iparams.json             # REQUIRED - even if empty {}
 ```
 
-**Always create these files (Serverless apps):**
+**Serverless apps (serverless-skeleton):**
 ```
 server/
 └── server.js                # Use $request.invokeTemplate()
 config/
-└── iparams.json             # If API keys needed
+└── iparams.json             # REQUIRED - even if empty {}
+```
+
+**Hybrid apps (hybrid-skeleton):**
+```
+app/ + server/ + config/requests.json + config/iparams.json
+```
+
+**OAuth apps (oauth-skeleton):**
+```
+app/ + server/ + config/oauth_config.json + config/requests.json + config/iparams.json
 ```
 
 ### Step 4: Validate Against Test Patterns
@@ -490,7 +443,9 @@ Before presenting the app, validate against:
 - **Backend to external APIs** → `references/api/request-method-docs.md`
 - **OAuth flows** → `references/api/oauth-docs.md`
 - **Interface/Instance methods** → `references/api/interface-method-docs.md`, `instance-method-docs.md`
-- **Installation parameters** → `references/runtime/installation-parameters-docs.md`
+- **Installation parameters** → `references/runtime/iparams-comparison.md` (default vs custom)
+  - Default iparams → `references/runtime/installation-parameters-docs.md`
+  - Custom iparams → `references/runtime/custom-iparams-docs.md`
 - **Data storage** → `references/runtime/keyvalue-store-docs.md`, `object-store-docs.md`
 - **Jobs/Scheduled tasks** → `references/runtime/jobs-docs.md`
 - **Actions** → `references/runtime/actions-docs.md`
@@ -530,7 +485,10 @@ Before presenting the app, validate against:
 - [ ] All frontend HTML includes Crayons CDN
 - [ ] `manifest.json` has `engines` block
 - [ ] At least one product module declared (even if empty `{}`)
-- [ ] `config/iparams.json` exists (mandatory file, can be empty `{}`)
+- [ ] **Installation parameters** (choose ONE):
+  - [ ] `config/iparams.json` (default - platform generates form) OR
+  - [ ] `config/iparams.html` + `config/assets/iparams.js` (custom Settings UI)
+  - [ ] **Cannot have both** - use only one approach per app
 
 ### Manifest Validation
 - [ ] `"platform-version": "3.0"`
@@ -584,16 +542,20 @@ Before presenting the app, validate against:
 
 **UNIVERSAL PRE-GENERATION CHECKLIST - MANDATORY:**
 
-1. **Icon.svg** - MUST create `app/styles/images/icon.svg` (NO EXCEPTIONS)
-2. **FQDN** - Host MUST be FQDN only, NO path, NO encoded characters
-3. **Request Syntax** - MUST use `<%= variable %>`, NEVER `{{variable}}`
-4. **Path** - MUST start with `/`
-5. **OAuth Structure** - MUST use `oauth_iparams` in `oauth_config.json`
-6. **Crayons CDN** - MUST include in ALL HTML files
-7. **Async/Await** - If `async`, MUST have `await` - NO EXCEPTIONS - REMOVE `async` IF NO `await`
-8. **Helper Functions** - MUST be AFTER exports block
-9. **Scheduled Events** - MUST be created dynamically, NOT in manifest
-10. **Product Module** - MUST have at least one product module
+1. **PLATFORM 3.0 ONLY** - **VERIFY NO PLATFORM 2.X PATTERNS** - `"platform-version": "3.0"`, `"modules"` NOT `"product"`, NO `whitelisted-domains`
+2. **Icon.svg** - MUST create `app/styles/images/icon.svg` (NO EXCEPTIONS for frontend apps)
+3. **Installation Parameters** - MUST have EITHER `config/iparams.json` OR `config/iparams.html` (NOT BOTH)
+4. **FQDN** - Host MUST be FQDN only, NO path, NO encoded characters
+5. **Request Syntax** - MUST use `<%= variable %>`, NEVER `{{variable}}`
+6. **Path** - MUST start with `/`
+7. **OAuth Structure** - MUST use `oauth_iparams` in `oauth_config.json` with `integrations` wrapper
+8. **Crayons CDN** - MUST include in ALL HTML files
+9. **Async/Await** - If `async`, MUST have `await` - NO EXCEPTIONS - REMOVE `async` IF NO `await`
+10. **Helper Functions** - MUST be AFTER exports block
+11. **Scheduled Events** - MUST be created dynamically, NOT in manifest
+12. **Product Module** - MUST have at least one product module
+13. **LOCATION PLACEMENT** - **VERIFY BEFORE GENERATING MANIFEST** - `full_page_app` → `modules.common.location`, product locations → product module
+14. **REQUEST API** - MUST use `$request.invokeTemplate()`, NEVER `$request.post()/.get()/.put()/.delete()`
 
 **CRITICAL: #7 Async/Await Rule - ZERO TOLERANCE**
 - Every `async` function MUST contain at least one `await` expression
@@ -609,516 +571,16 @@ Before presenting the app, validate against:
 
 ### Error Categories & Fixes
 
-#### 1. FDK Validation Errors
+**For comprehensive error catalog with examples and fixes:**
+- Load: `references/errors/error-catalog.md`
+- Also see: `references/errors/manifest-errors.md`, `references/errors/oauth-errors.md`, `references/errors/request-template-errors.md`
 
-**Error: "iparams.json is mandatory"**
-- **Fix:** Always create `config/iparams.json` (can be empty `{}`)
-- **Rule:** Every app MUST have `config/iparams.json` file
-
-**Error: "icon.svg not found"**
-- **Fix:** Create `app/styles/images/icon.svg`
-- **Rule:** Frontend apps MUST have icon.svg in correct location
-
-**Error: "Invalid location(s) mentioned in modules"**
-- **Fix:** Move location to correct module:
-  - `full_page_app`, `cti_global_sidebar` → `modules.common.location`
-  - `ticket_sidebar`, `asset_sidebar`, etc. → `modules.<product_module>.location`
-- **Rule:** Product-specific locations CANNOT be in `common` module
-
-**Error: "Request template not found"**
-- **Fix:** Ensure request template name matches in:
-  1. `manifest.json` → `modules.common.requests.templateName`
-  2. `config/requests.json` → `templateName`
-  3. Code → `$request.invokeTemplate('templateName', {})`
-- **Rule:** All three must match exactly
-
-**Error: "Unexpected token { in JSON" or "Multiple top-level JSON objects"**
-- **Cause:** JSON file contains multiple top-level objects instead of single object
-- **Fix:** Merge into single top-level object with proper commas
-- **Example (requests.json):**
-```json
-// ❌ WRONG - Multiple top-level objects
-{  "request1": { ... } }
-{  "request2": { ... } }
-
-// ✅ CORRECT - Single object
-{
-  "request1": { ... },
-  "request2": { ... }
-}
-```
-- **Example (iparams.json):**
-```json
-// ❌ WRONG - Multiple top-level objects
-{  "param1": { ... } }
-{  "param2": { ... } }
-
-// ✅ CORRECT - Single object
-{
-  "param1": { ... },
-  "param2": { ... }
-}
-```
-- **Rule:** All JSON files MUST have single top-level object. Use commas to separate properties.
-
-**Error: "Request template schema/host must not have path"**
-- **Cause:** Host contains URL path or encoded characters (e.g., `{{subdomain}}.freshdesk.com/api` or `%7B%7Bsubdomain%7D%7D.freshdesk.com`)
-- **Fix:** Use context variables with `<%= %>` syntax:
-```json
-{
-  "myRequest": {
-    "schema": {
-      "protocol": "https",
-      "method": "GET",
-      "host": "<%= context.subdomain %>.freshdesk.com",
-      "path": "/api/v2/contacts",
-      "headers": {
-        "Authorization": "Basic <%= encode(context.api_key) %>"
-      }
-    }
-  }
-}
-```
-- **Rule:** Host must be FQDN only. Use `<%= context.variable %>` for dynamic values, NOT `{{variable}}`
-
-**Error: "Request template schema/host must be FQDN"**
-- **Cause:** Host contains template variables with `{{}}` syntax instead of `<%= %>`
-- **Fix:** Replace `{{variable}}` with `<%= context.variable %>`:
-```json
-// ❌ WRONG
-"host": "{{freshdesk_subdomain}}.freshdesk.com"
-
-// ✅ CORRECT
-"host": "<%= context.freshdesk_subdomain %>.freshdesk.com"
-```
-- **Rule:** ALWAYS use `<%= context.variable %>` for dynamic values in request templates
-
-**Error: "Request template schema/path must start with '/'"**
-- **Cause:** Path doesn't start with forward slash or uses template variables incorrectly
-- **Fix:** Ensure path starts with `/` and use context variables:
-```json
-// ❌ WRONG
-"path": "{{zapier_webhook_path}}"
-
-// ✅ CORRECT
-"path": "<%= context.webhook_path %>"
-// And ensure the iparam value starts with '/', e.g., "/hooks/catch/123"
-```
-- **Rule:** Path must start with `/`. Use `<%= context.variable %>` for dynamic paths
-
-**Error: "Template file 'app/index.html' mentioned in ticket_sidebar is not found"**
-- **Fix:** Ensure file exists at exact path: `app/index.html`
-- **Rule:** ALL files referenced in manifest MUST exist in app folder
-
-**Error: "Icon 'app/styles/images/icon.svg' mentioned in ticket_sidebar is not found"**
-- **Fix:** Create `app/styles/images/icon.svg` file
-- **Rule:** ALWAYS create icon.svg - NO EXCEPTIONS. This is the most common validation failure.
-
-**Error: "SMI function not found"**
-- **Fix:** Ensure function name matches in:
-  1. `manifest.json` → `modules.common.functions.functionName`
-  2. `server/server.js` → `exports.functionName`
-  3. Frontend → `client.request.invoke('functionName', {})`
-- **Rule:** All three must match exactly
-
-**Error: "Invalid event: 'onScheduledSync' for module: common"**
-- **Fix:** Remove scheduled events from manifest. Create dynamically:
-```javascript
-exports = {
-  onAppInstallHandler: async function(args) {
-    await $schedule.create({
-      name: "dailySync",
-      schedule_at: new Date(Date.now() + 86400000).toISOString(),
-      time_unit: "days",
-      frequency: 1,
-      data: { syncType: "full" }
-    });
-  },
-  scheduledSyncHandler: async function(payload) {
-    // Handler called automatically by platform
-    await syncData(payload.data);
-  }
-};
-```
-- **Rule:** Scheduled events are created at runtime, NOT declared in manifest
-
-#### 2. Code Quality Errors
-
-**Error: "Async function has no 'await' expression"**
-- **CRITICAL:** This is a MANDATORY lint requirement - ZERO TOLERANCE
-- **Rule:** If function is `async`, it MUST contain at least one `await` expression
-
-**Fix Option 1:** Add `await` keyword:
-```javascript
-// ✅ CORRECT: async with await
-exports = {
-  fetchData: async function(args) {
-    return await $request.invokeTemplate('api', {});
-  }
-};
-```
-
-**Fix Option 2:** Remove `async` keyword if no await needed:
-```javascript
-// ✅ CORRECT: No async, no await needed
-exports = {
-  fetchData: function(args) {
-    return $request.invokeTemplate('api', {});
-  }
-};
-```
-
-**❌ NEVER DO THIS:**
-```javascript
-// ❌ WRONG: async without await - LINT ERROR
-exports = {
-  fetchData: async function(args) {
-    return $request.invokeTemplate('api', {});  // Missing await!
-  }
-};
-```
-
-**ENFORCEMENT:**
-- Every `async` function MUST have at least one `await`
-- If no `await` is needed, REMOVE `async` keyword
-- No exceptions - this causes lint failures
-
-**Error: "Parameter 'args' is defined but never used"**
-- **Fix Option 1:** Remove unused parameter:
-```javascript
-exports = {
-  handler: function() {
-    console.log('Called');
-  }
-};
-```
-- **Fix Option 2:** Prefix with underscore (intentionally unused):
-```javascript
-exports = {
-  handler: function(_args) {
-    console.log('Called');
-  }
-};
-```
-- **Rule:** Remove unused parameters or prefix with `_`
-
-**Error: "Function complexity exceeds 7"**
-- **Fix:** Extract helper functions:
-```javascript
-// ❌ WRONG: High complexity
-function process(data) {
-  if (a) {
-    if (b) {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].valid) {
-          // nested logic
-        }
-      }
-    }
-  }
-}
-
-// ✅ CORRECT: Extract helpers
-function process(data) {
-  const validItems = getValidItems(data);
-  return processItems(validItems);
-}
-
-function getValidItems(data) {
-  return data.items.filter(item => item.valid);
-}
-```
-- **Rule:** Keep function complexity ≤ 7. Extract nested logic to helpers.
-
-**Error: "'client' declared and assigned in different scopes"**
-- **Fix:** Use IIFE pattern:
-```javascript
-// ❌ WRONG: Race condition
-let client;
-async function init() {
-  client = await app.initialized();
-}
-init();
-// Use client here - may not be initialized!
-
-// ✅ CORRECT: IIFE pattern
-(async function() {
-  const client = await app.initialized();
-  // Use client here safely
-  client.events.on('app.activated', () => {
-    // App logic
-  });
-})();
-```
-- **Rule:** Always use IIFE pattern for async initialization
-
-**Error: "Error while parsing file containing serverless functions"**
-- **Fix:** Move helper functions AFTER exports block:
-```javascript
-// ❌ WRONG: Helper BEFORE exports (FDK parser error!)
-function parseUrl(url) {
-  return new URL(url);
-}
-
-exports = {
-  myHandler: function(args) {
-    const parsed = parseUrl(args.url);
-  }
-};
-
-// ✅ CORRECT Option 1: Helper INSIDE exports
-exports = {
-  parseUrl: function(url) {
-    return new URL(url);
-  },
-  myHandler: function(args) {
-    const parsed = this.parseUrl(args.url);
-  }
-};
-
-// ✅ CORRECT Option 2: Helper AFTER exports
-exports = {
-  myHandler: function(args) {
-    const parsed = parseUrl(args.url);
-  }
-};
-
-function parseUrl(url) {
-  return new URL(url);
-}
-
-// ✅ CORRECT Option 3: Inline helper
-exports = {
-  myHandler: function(args) {
-    const parseUrl = (url) => new URL(url);
-    const parsed = parseUrl(args.url);
-  }
-};
-```
-- **Rule:** Helper functions MUST be AFTER exports block, INSIDE exports, or inline
-
-**Error: "Unreachable code"**
-- **Fix:** Restructure control flow:
-```javascript
-// ❌ WRONG: Unreachable code
-exports = {
-  myHandler: function(args) {
-    if (!args.data) {
-      return { error: 'No data' };
-    }
-    // This code is unreachable if args.data is falsy
-    const result = processData(args.data);
-    return result;
-  }
-};
-
-// ✅ CORRECT: Proper control flow
-exports = {
-  myHandler: function(args) {
-    if (!args.data) {
-      return { error: 'No data' };
-    }
-    // This code is reachable
-    const result = processData(args.data);
-    return result;
-  }
-};
-```
-- **Rule:** Ensure all code paths are reachable. Remove dead code.
-
-#### 3. Platform 2.x Pattern Errors (MUST REJECT)
-
-**Error: "whitelisted-domains" is deprecated**
-- **Fix:** Use request templates instead:
-```json
-// ❌ WRONG: Platform 2.x
-{
-  "whitelisted-domains": ["https://api.example.com"]
-}
-
-// ✅ CORRECT: Platform 3.0
-// In manifest.json:
-{
-  "modules": {
-    "common": {
-      "requests": {
-        "apiCall": {}
-      }
-    }
-  }
-}
-// In config/requests.json:
-{
-  "apiCall": {
-    "schema": {
-      "method": "GET",
-      "host": "api.example.com",
-      "path": "/endpoint"
-    }
-  }
-}
-```
-- **Rule:** NEVER use `whitelisted-domains`. Always use request templates.
-
-**Error: "post is no longer supported in Request API"**
-- **Fix:** Use `$request.invokeTemplate()`:
-```javascript
-// ❌ WRONG: Platform 2.x
-$request.post('https://api.example.com/endpoint', options);
-
-// ✅ CORRECT: Platform 3.0
-await $request.invokeTemplate('apiCall', {
-  context: {},
-  body: JSON.stringify({ data: 'value' })
-});
-```
-- **Rule:** NEVER use `$request.post()`, `.get()`, `.put()`, `.delete()`. Always use `$request.invokeTemplate()`.
-
-**Error: "Invalid platform-version"**
-- **Fix:** Always use Platform 3.0:
-```json
-// ❌ WRONG: Platform 2.x
-{
-  "platform-version": "2.3",
-  "product": {
-    "freshdesk": {}
-  }
-}
-
-// ✅ CORRECT: Platform 3.0
-{
-  "platform-version": "3.0",
-  "modules": {
-    "common": {},
-    "support_ticket": {}
-  }
-}
-```
-- **Rule:** ALWAYS use `"platform-version": "3.0"` and `modules` structure.
-
-#### 4. OAuth Configuration Errors
-
-**Error: "OAuth config must have required property 'integrations'"**
-- **Fix:** Wrap OAuth config in `integrations`:
-```json
-// ❌ WRONG: Platform 2.x format
-{
-  "client_id": "{{client_id}}",
-  "client_secret": "{{client_secret}}",
-  "authorize_url": "https://...",
-  "token_url": "https://..."
-}
-
-// ✅ CORRECT: Platform 3.0 format
-{
-  "integrations": {
-    "oauth_name": {
-      "display_name": "Service Name",
-      "client_id": "{{client_id}}",
-      "client_secret": "{{client_secret}}",
-      "authorize_url": "https://...",
-      "token_url": "https://...",
-      "token_type": "account",
-      "options": {
-        "scope": "read write"
-      }
-    }
-  }
-}
-```
-- **Rule:** OAuth config MUST have `integrations` wrapper.
-
-**Error: "OAuth request missing 'options.oauth' configuration"**
-- **Fix:** Add OAuth options to request template:
-```json
-// ❌ WRONG: Missing OAuth options
-{
-  "getOAuthData": {
-    "schema": {
-      "method": "GET",
-      "host": "api.github.com",
-      "path": "/user"
-    }
-  }
-}
-
-// ✅ CORRECT: OAuth configured
-{
-  "getOAuthData": {
-    "schema": {
-      "method": "GET",
-      "host": "api.github.com",
-      "path": "/user",
-      "headers": {
-        "Authorization": "bearer <%= access_token %>"
-      }
-    },
-    "options": {
-      "oauth": "github"
-    }
-  }
-}
-```
-- **Rule:** OAuth requests MUST have `options.oauth` and `<%= access_token %>` header.
-
-#### 5. UI Component Errors
-
-**Error: "Plain HTML form elements not allowed"**
-- **Fix:** Use Crayons components:
-```html
-<!-- ❌ WRONG: Plain HTML -->
-<button onclick="handleClick()">Click Me</button>
-<input type="text" />
-<select><option>Item</option></select>
-<textarea></textarea>
-
-<!-- ✅ CORRECT: Crayons components -->
-<fw-button color="primary" id="btnClick">Click Me</fw-button>
-<fw-input label="Name" placeholder="Enter name"></fw-input>
-<fw-select label="Choose">
-  <fw-select-option value="1">Item</fw-select-option>
-</fw-select>
-<fw-textarea label="Description"></fw-textarea>
-```
-- **Rule:** ALL form elements MUST use Crayons components.
-
-**Error: "Crayons components used but CDN not included"**
-- **Fix:** Add Crayons CDN to HTML:
-```html
-<!-- ✅ REQUIRED: Crayons CDN -->
-<script async type="module" src="https://cdn.jsdelivr.net/npm/@freshworks/crayons@v4/dist/crayons/crayons.esm.js"></script>
-<script async nomodule src="https://cdn.jsdelivr.net/npm/@freshworks/crayons@v4/dist/crayons/crayons.js"></script>
-```
-- **Rule:** ALL HTML files MUST include Crayons CDN (even if no Crayons components yet).
-
-#### 6. Manifest Structure Errors
-
-**Error: "Missing engines block"**
-- **Fix:** Add engines block:
-```json
-{
-  "platform-version": "3.0",
-  "modules": {},
-  "engines": {
-    "node": "18.20.8",
-    "fdk": "9.7.4"
-  }
-}
-```
-- **Rule:** Manifest MUST have `engines` block with Node.js and FDK versions.
-
-**Error: "At least one product module required"**
-- **Fix:** Add product module:
-```json
-{
-  "platform-version": "3.0",
-  "modules": {
-    "common": {},
-    "support_ticket": {}
-  }
-}
-```
-- **Rule:** Manifest MUST have at least one product module (even if empty `{}`).
+**Top 5 Most Common Errors:**
+1. **Missing `app/styles/images/icon.svg`** - Frontend apps must have icon
+2. **JSON multiple top-level objects** - Merge into single object with commas
+3. **Host with path/encoded chars** - Use FQDN only + `<%= context.variable %>`
+4. **Async without await** - Add `await` OR remove `async`
+5. **Helper before exports** - Move helper functions AFTER `exports` block
 
 ### UNIVERSAL ERROR PREVENTION CHECKLIST
 
@@ -1155,7 +617,14 @@ await $request.invokeTemplate('apiCall', {
 
 #### Manifest Structure
 - [ ] **All SMI functions declared in manifest** - `modules.common.functions`
-- [ ] **All locations in correct modules** - Product-specific NOT in common
+- [ ] **LOCATION PLACEMENT VERIFIED** - **MANDATORY PRE-GENERATION CHECK**:
+  - ✅ `full_page_app` → **MUST** be in `modules.common.location`
+  - ✅ `cti_global_sidebar` → **MUST** be in `modules.common.location`
+  - ✅ `ticket_sidebar` → **MUST** be in `modules.support_ticket.location` (NOT common)
+  - ✅ `contact_sidebar` → **MUST** be in `modules.support_contact.location` (NOT common)
+  - ✅ `asset_sidebar` → **MUST** be in `modules.service_asset.location` (NOT common)
+  - ❌ **NEVER put `full_page_app` in product modules**
+  - ❌ **NEVER put product locations in common module**
 - [ ] **At least one product module** - Even if empty `{}`
 - [ ] **No Platform 2.x patterns** - No `whitelisted-domains`, no `product`
 - [ ] **No scheduled events in manifest** - Create dynamically with `$schedule.create()`
@@ -1181,7 +650,7 @@ await $request.invokeTemplate('apiCall', {
 4. Re-run `fdk validate` until it passes
 5. Only finalize when validation passes completely
 
-**Reference:** See `validation-autofix.mdc` for detailed autofix patterns.
+**Reference:** See `.cursor/rules/validation-autofix.mdc` for detailed autofix patterns.
 
 **IF ANY ITEM FAILS → STOP AND FIX BEFORE PROCEEDING**
 
@@ -1273,7 +742,7 @@ After successfully generating an app, ALWAYS include:
 
 🔍 **Pre-Finalization Steps (MANDATORY):**
 1. Run: `cd <app-directory> && fdk validate`
-2. Fix any JSON structure errors (see validation-autofix.mdc)
+2. Fix any JSON structure errors (see .cursor/rules/validation-autofix.mdc)
 3. Re-run validation until it passes
 4. Only proceed when validation passes completely
 
@@ -1461,271 +930,43 @@ Use these references to validate generated apps:
 
 ---
 
+
+---
+
 ## Serverless Events Reference
 
-### Common Events (configured at `modules.common.events`)
+**For complete event list by product:**
+- Load: `references/events/event-reference.md`
 
-**App Lifecycle Events:**
-- `onAppInstall` - Triggered when app is installed
-  - **CRITICAL:** MUST be included in manifest if app uses iparams (installation parameters)
-  - Handler receives iparams in `args.iparams` for validation/initialization
-- `afterAppUpdate` - Triggered after app update
-- `onAppUninstall` - Triggered when app is uninstalled
-  - **CRITICAL:** MUST be included if app has scheduled events, background tasks, webhooks, or any processes that should stop on uninstall
-  - Handler should clean up scheduled events, cancel webhooks, stop background processes
+**Key events:**
+- `onAppInstall` (MUST include if app uses iparams)
+- `onAppUninstall` (MUST include if app has scheduled events/webhooks)
+- `onTicketCreate`, `onTicketUpdate` (in product modules)
+- Scheduled events created dynamically with `$schedule.create()` - NOT declared in manifest
 
-**Rules:**
-- If `config/iparams.json` contains any parameters (not empty `{}`), ALWAYS include `onAppInstall` event handler in `modules.common.events`.
-- If app has scheduled events (`$schedule.create()`), background tasks, webhooks, or recurring processes, ALWAYS include `onAppUninstall` event handler in `modules.common.events`.
+## Request Templates & OAuth
 
-**External Events:**
-- `onExternalEvent` - Triggered by external webhook/event
+**For detailed request template syntax and OAuth configuration:**
+- Load: `references/architecture/request-templates-latest.md`
+- Load: `references/architecture/oauth-configuration-latest.md`
+- Load: `references/api/request-method-docs.md`
 
-**Scheduled Events:**
-- Created dynamically using `$schedule.create()` - NOT declared in manifest
+**Quick Rules:**
+- Host must be FQDN only (no path)
+- Path must start with `/`
+- Use `<%= context.variable %>` for iparams
+- Use `<%= access_token %>` for OAuth
+- OAuth requests need `"options": { "oauth": "integration_name" }`
 
-### Freshdesk support_ticket Events (configured at `modules.support_ticket.events`)
+## Jobs Feature
 
-- `onTicketCreate` - Ticket created
-- `onTicketUpdate` - Ticket updated
-- `onTicketDelete` - Ticket deleted
-- `onTimeEntryCreate` - Time entry created
-- `onTimeEntryUpdate` - Time entry updated
-- `onTimeEntryDelete` - Time entry deleted
-- `onTicketFieldCreate` - Ticket field created
-- `onTicketFieldDelete` - Ticket field deleted
-- `onConversationCreate` - Conversation created
-- `onConversationUpdate` - Conversation updated
-- `onConversationDelete` - Conversation deleted
-- `onCannedResponseCreate` - Canned response created
-- `onCannedResponseUpdate` - Canned response updated
-- `onCannedResponseDelete` - Canned response deleted
+**For Jobs documentation:**
+- Load: `references/runtime/jobs-docs.md`
 
-### Freshdesk support_contact Events (configured at `modules.support_contact.events`)
-
-- `onContactCreate` - Contact created
-- `onContactUpdate` - Contact updated
-- `onContactDelete` - Contact deleted
-
-### Freshdesk support_company Events (configured at `modules.support_company.events`)
-
-- `onCompanyCreate` - Company created
-- `onCompanyUpdate` - Company updated
-- `onCompanyDelete` - Company deleted
-
-### Freshdesk support_agent Events (configured at `modules.support_agent.events`)
-
-- `onAgentCreate` - Agent created
-- `onAgentUpdate` - Agent updated
-- `onAgentDelete` - Agent deleted
-- `onAgentStatusCreate` - Agent status created
-- `onAgentStatusUpdate` - Agent status updated
-- `onAgentStatusDelete` - Agent status deleted
-- `onAgentAvailabilityUpdate` - Agent availability updated
-- `onGroupCreate` - Group created
-- `onGroupUpdate` - Group updated
-- `onGroupDelete` - Group deleted
-
-### Freshservice service_ticket Events (configured at `modules.service_ticket.events`)
-
-- Similar to support_ticket events (check references for complete list)
-
-### Freshservice service_asset Events (configured at `modules.service_asset.events`)
-
-- Asset-specific events (check references for complete list)
-
-### Freshservice service_change Events (configured at `modules.service_change.events`)
-
-- Change-specific events (check references for complete list)
-
-### Freshservice service_user Events (configured at `modules.service_user.events`)
-
-- `onUserCreate` - User created
-- `onUserUpdate` - User updated
-- `onUserDelete` - User deleted
-
-## Request Templates Reference
-
-### CRITICAL: Request Template Syntax Rules
-
-**ALWAYS use `<%= context.variable %>` for dynamic values - NEVER use `{{variable}}`**
-
-**Common Errors & Fixes:**
-- ❌ `"host": "{{subdomain}}.example.com"` → Causes "must be FQDN" error
-- ✅ `"host": "<%= context.subdomain %>.example.com"` → CORRECT
-- ❌ `"path": "{{webhook_path}}"` → Causes "must start with '/'" error
-- ✅ `"path": "<%= context.webhook_path %>"` → CORRECT (ensure value starts with `/`)
-- ❌ `"Authorization": "Bearer {{api_key}}"` → Causes substitution errors
-- ✅ `"Authorization": "Bearer <%= context.api_key %>"` → CORRECT
-
-### Request Template Structure
-
-**In `config/requests.json`:**
-```json
-{
-  "requestTemplateName": {
-    "schema": {
-      "protocol": "https",
-      "method": "GET|POST|PUT|DELETE|PATCH",
-      "host": "<%= context.subdomain %>.example.com",
-      "path": "/api/endpoint",
-      "headers": {
-        "Authorization": "Bearer <%= context.api_key %>",
-        "Content-Type": "application/json"
-      },
-      "body": "<%= body %>",
-      "query": {}
-    },
-    "options": {
-      "maxAttempts": 1-5,
-      "retryDelay": 0-1500,
-      "oauth": "oauth_config_name"
-    }
-  }
-}
-```
-
-**CRITICAL Rules:**
-- ✅ Host must be FQDN only (no path, no encoded characters)
-- ✅ Path must start with `/`
-- ✅ Use `<%= context.variable %>` for iparams (NOT `{{variable}}`)
-- ✅ Use `<%= body %>` for request body
-- ✅ For fully dynamic hosts: `"host": "<%= context.webhook_host %>"`
-- ✅ For fully dynamic paths: `"path": "<%= context.webhook_path %>"` (value must start with `/`)
-
-### Request Template Substitutions
-
-**CRITICAL: Use the correct syntax for each use case**
-
-**Installation Parameters (iparams):**
-- ✅ `<%= context.param_name %>` - CORRECT way to use iparams in request templates
-- ❌ `{{iparam.param_name}}` - DEPRECATED, causes validation errors
-- ❌ `{{param_name}}` - WRONG, causes "must be FQDN" error
-
-**Context Variables:**
-- `<%= context.variable_name %>` - Dynamic context variables passed at runtime
-- `<%= access_token %>` - OAuth access token (when using `options.oauth`)
-- `<%= body %>` - Request body content
-
-**Encoding:**
-- `<%= encode(context.api_key) %>` - Base64 encode (for Basic Auth)
-
-**Example - Correct iparam usage:**
-```json
-{
-  "myApiCall": {
-    "schema": {
-      "host": "<%= context.subdomain %>.freshdesk.com",
-      "path": "/api/v2/contacts",
-      "headers": {
-        "Authorization": "Basic <%= encode(context.api_key) %>"
-      }
-    }
-  }
-}
-```
-
-### OAuth Request Template Pattern
-
-**In `config/requests.json`:**
-```json
-{
-  "oauthApiCall": {
-    "schema": {
-      "method": "GET",
-      "host": "api.example.com",
-      "path": "/resource",
-      "headers": {
-        "Authorization": "bearer <%= access_token %>",
-        "Content-Type": "application/json"
-      }
-    },
-    "options": {
-      "oauth": "oauth_config_name"
-    }
-  }
-}
-```
-
-**In `config/oauth_config.json`:**
-```json
-{
-  "integrations": {
-    "oauth_config_name": {
-      "display_name": "Service Name",
-      "client_id": "{{client_id}}",
-      "client_secret": "{{client_secret}}",
-      "authorize_url": "https://provider.com/authorize",
-      "token_url": "https://provider.com/token",
-      "token_type": "account|agent",
-      "options": {
-        "scope": "read write"
-      },
-      "oauth_iparams": {
-        "domain": {
-          "display_name": "Domain",
-          "type": "text",
-          "required": true
-        }
-      }
-    }
-  }
-}
-```
-
-### Invoking Request Templates
-
-**From Frontend (`app.js`):**
-```javascript
-const response = await client.request.invokeTemplate('requestTemplateName', {
-  context: { variable: 'value' }
-});
-```
-
-**From Backend (`server/server.js`):**
-```javascript
-const response = await $request.invokeTemplate('requestTemplateName', {
-  context: {},
-  body: JSON.stringify({ data: 'value' })
-});
-```
-
-## Jobs Feature Reference
-
-**Jobs** enable asynchronous backend processing for time-intensive operations.
-
-### Job Declaration (manifest.json)
-```json
-{
-  "modules": {
-    "common": {
-      "jobs": {
-        "jobName": {
-          "timeout": 15
-        }
-      }
-    }
-  }
-}
-```
-
-### Job Invocation (app.js)
-```javascript
-client.jobs.invoke("jobName", "tag", { data: "value" })
-  .then(response => console.log("Success:", response))
-  .catch(error => console.error("Error:", error));
-```
-
-### Job Handler (server/server.js)
-```javascript
-exports = {
-  jobName: async function(args) {
-    await $job.updateStatusMessage("Processing...");
-    // Business logic
-    renderData(null, { success: true });
-  }
-};
-```
+**Quick pattern:**
+1. Declare in manifest: `modules.common.jobs.jobName`
+2. Invoke from frontend: `client.jobs.invoke("jobName", "tag", {data})`
+3. Handle in server: `exports.jobName = async function(args) { ... }`
 
 ## Summary
 

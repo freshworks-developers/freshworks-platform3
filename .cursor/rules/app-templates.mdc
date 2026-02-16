@@ -5,19 +5,42 @@ alwaysApply: true
 
 # Platform 3.0 App Templates
 
+**🚨 PLATFORM 3.0 ONLY - ZERO TOLERANCE FOR PLATFORM 2.X PATTERNS 🚨**
+
+**BEFORE GENERATING ANY CODE:**
+1. ✅ Verify `"platform-version": "3.0"` (NOT "2.3", "2.2", "2.1")
+2. ✅ Verify `"modules": {}` structure (NOT `"product": {}`)
+3. ✅ Verify NO `"whitelisted-domains"` (use request templates)
+4. ✅ Verify `$request.invokeTemplate()` (NOT `.post()`, `.get()`, `.put()`, `.delete()`)
+5. ✅ Verify OAuth has `integrations` wrapper (NOT flat structure)
+
+**IF ANY PLATFORM 2.X PATTERN DETECTED → STOP → REGENERATE WITH PLATFORM 3.0**
+
 **UNIVERSAL CRITICAL ENFORCEMENT - NO EXCEPTIONS - NO CONTRADICTIONS:**
 
 ### ❌ NEVER Generate These (Immediate Rejection)
+
+**🚨 PLATFORM 2.X PATTERNS - ZERO TOLERANCE:**
+- ❌ `"platform-version": "2.3"` or `"2.2"` or `"2.1"` - **MUST BE "3.0"**
+- ❌ `"product": { "freshdesk": {} }` - **MUST USE "modules"** in Platform 3.0
 - ❌ `"whitelisted-domains"` - Platform 2.3 syntax, deprecated and invalid in 3.0
-- ❌ `"product"` structure - Use `"modules"` in Platform 3.0
+- ❌ `$request.post()`, `.get()`, `.put()`, `.delete()` - **MUST USE `$request.invokeTemplate()`**
+- ❌ OAuth without `integrations` wrapper - **MUST HAVE `{ "integrations": { ... } }`**
+
+**PLATFORM 3.0 REQUIREMENTS:**
 - ❌ Plain HTML: `<button>`, `<input>`, `<select>`, `<textarea>` - Use Crayons ONLY
 - ❌ `{{variable}}` syntax - Causes FQDN validation errors
 - ❌ Host with path: `api.example.com/api` - MUST be FQDN only
 - ❌ Host with encoded chars: `%7B%7Bvar%7D%7D.example.com` - Invalid
 - ❌ Path without `/`: `api/endpoint` - MUST start with `/`
+- ❌ `body` in request template schema - Body goes in invocation, not schema
+- ❌ Empty location objects: `"location": {}` - Define location or remove key
+- ❌ Missing `engines` block - MUST declare node and fdk versions
 - ❌ App files in workspace root - MUST create new app folder
 - ❌ Frontend app without `icon.svg` - #1 validation failure cause
 - ❌ OAuth credentials in `iparams.json` - MUST be in `oauth_iparams`
+- ❌ **`full_page_app` or `cti_global_sidebar` in product modules** - MUST be in `modules.common.location`
+- ❌ **Product-specific locations in `common` module** - `ticket_sidebar`, `contact_sidebar`, etc. MUST be in product module
 
 ### ✅ ALWAYS Generate These (Mandatory)
 - ✅ **`app/styles/images/icon.svg`** - MUST EXIST for frontend apps - NO EXCEPTIONS
@@ -97,6 +120,7 @@ When user says "Freshdesk app" or "Freshservice app":
 - ❌ Webhook receiver with **no status display**
 - ❌ Scheduled tasks with **no manual controls**
 - ❌ User explicitly says "no UI needed" or "background only"
+- ❌ **Enforcement/blocking use cases** - "prevent", "block", "validate before" (use background location with intercept events)
 
 **Examples:**
 
@@ -108,6 +132,8 @@ When user says "Freshdesk app" or "Freshservice app":
 | "Scheduled backup every night" | ❌ NO (Serverless) | Background task, no monitoring needed |
 | "GitHub issue sync" | ✅ YES (Hybrid) | User needs to see linked issues, manually create links, view sync status |
 | "Slack notification on ticket create" | ❌ NO (Serverless) | Pure notification, no user interaction |
+| "Prevent agents from replying unless field set" | ❌ NO (Background with intercept) | Enforcement/blocking, not display |
+| "Block ticket closure if condition not met" | ❌ NO (Background with intercept) | Enforcement/blocking, not display |
 
 **Default Rule: When in doubt, include frontend (Hybrid).** Users almost always want to see what's happening.
 
@@ -1030,14 +1056,27 @@ When adapting templates for different products:
 | "Freshservice asset sidebar" | `service_asset` | ✅ Use same base template |
 | "Freshsales deal page" | `deal` | ✅ Use same base template |
 
-**CRITICAL: Location Placement Rules**
+**CRITICAL: Location Placement Rules - ZERO TOLERANCE ENFORCEMENT**
+
+**🚨 BEFORE GENERATING MANIFEST: Verify location placement using this decision tree:**
+
+```
+IF location is full_page_app OR cti_global_sidebar:
+  → MUST be in modules.common.location
+  → NEVER in product modules
+
+IF location is ticket_sidebar, contact_sidebar, asset_sidebar, deal_entity_menu, etc.:
+  → MUST be in product module (support_ticket, support_contact, service_asset, deal, etc.)
+  → NEVER in modules.common.location
+```
 
 **Common Module Locations (ONLY these):**
 - `modules.common.location.full_page_app` ✅
-- `modules.common.location.cti_global_sidebar` ✅ (Freshdesk only)
+- `modules.common.location.cti_global_sidebar` ✅ (Freshdesk/Freshservice only)
 
 **Product Module Locations (NEVER in common):**
 - Freshdesk ticket: `modules.support_ticket.location.ticket_sidebar` ✅
+- Freshdesk contact: `modules.support_contact.location.contact_sidebar` ✅
 - Freshservice ticket: `modules.service_ticket.location.ticket_sidebar` ✅
 - Freshservice asset: `modules.service_asset.location.asset_sidebar` ✅
 - Freshsales deal: `modules.deal.location.deal_entity_menu` ✅
@@ -1055,11 +1094,28 @@ When adapting templates for different products:
 }
 ```
 
+**❌ WRONG - Will cause validation error:**
+```json
+{
+  "modules": {
+    "support_contact": {
+      "location": {
+        "full_page_app": { ... }  // ❌ INVALID!
+      }
+    }
+  }
+}
+```
+
 **✅ CORRECT:**
 ```json
 {
   "modules": {
-    "common": {},
+    "common": {
+      "location": {
+        "full_page_app": { ... }  // ✅ CORRECT!
+      }
+    },
     "support_ticket": {
       "location": {
         "ticket_sidebar": { ... }  // ✅ CORRECT!
@@ -1116,29 +1172,37 @@ Always include basic styling:
 
 ```
 IF user needs UI → Start with Template 1 (Frontend)
-  IF also needs backend calls → Use Template 3 (Hybrid)
-  IF needs OAuth → Use Template 4 (OAuth)
+ IF also needs backend calls → Use Template 3 (Hybrid)
+ IF needs OAuth → Use Template 4 (OAuth)
 
 IF user needs NO UI → Start with Template 2 (Serverless)
-  IF needs external API → Add requests to common module
+ IF needs external API → Add requests to common module
 
 ALWAYS:
-  1. Start with correct skeleton
-  2. Create complete folder structure
-  3. Generate all required files (HTML, JS, CSS, icon.svg)
-  4. Change module name based on product
-  5. Add requests/functions as needed
-  6. NEVER add whitelisted-domains
-  7. NEVER use "product" structure
+ 1. Start with correct skeleton
+ 2. Create complete folder structure
+ 3. Generate all required files (HTML, JS, CSS, icon.svg)
+ 4. Change module name based on product
+ 5. Add requests/functions as needed
+ 6. NEVER add whitelisted-domains
+ 7. NEVER use "product" structure
+ 8. **VERIFY location placement BEFORE generation**:
+    - full_page_app → modules.common.location
+    - ticket_sidebar → modules.support_ticket.location
+    - contact_sidebar → modules.support_contact.location
+    - asset_sidebar → modules.service_asset.location
 ```
 
 ---
 
 ## UNIVERSAL VALIDATION CHECKLIST - MANDATORY FOR ALL APPS
 
+**🚨 CRITICAL: This checklist MUST be verified BEFORE generating any manifest.json code! 🚨**
+
 **BEFORE generating ANY code, ALL items MUST pass:**
 
 ### 🔴 CRITICAL - Top Validation Failures (Fix These First!)
+- [ ] **PLATFORM 3.0 VERIFIED** ✅ - `"platform-version": "3.0"`, `"modules"` NOT `"product"`, NO Platform 2.x patterns
 - [ ] **`app/styles/images/icon.svg` EXISTS** ✅ - #1 FDK validation failure - MUST CREATE
 - [ ] **Host is FQDN only** ✅ - NO path (`api.example.com` not `api.example.com/api`)
 - [ ] **Host has NO encoded characters** ✅ - NO `%7B%7B` patterns
@@ -1146,6 +1210,8 @@ ALWAYS:
 - [ ] **Use `<%= variable %>`** ✅ - NEVER `{{variable}}` (causes FQDN errors)
 - [ ] **Crayons CDN in ALL HTML** ✅ - BOTH script tags (ESM and nomodule)
 - [ ] **Helper functions AFTER exports** ✅ - FDK parser requirement
+- [ ] **LOCATION PLACEMENT VERIFIED** ✅ - **MANDATORY PRE-GENERATION CHECK**
+- [ ] **REQUEST API VERIFIED** ✅ - `$request.invokeTemplate()` NOT `.post()/.get()/.put()/.delete()`
 
 ### Platform 3.0 Structure
 - [ ] `"platform-version": "3.0"` ✅
@@ -1157,10 +1223,16 @@ ALWAYS:
 - [ ] NO `"whitelisted-domains"` ✅
 - [ ] Correct module name for product ✅
 
-### Location Placement
-- [ ] **Locations in correct module** ✅
-  - `full_page_app` and `cti_global_sidebar` → `modules.common.location`
-  - `ticket_sidebar`, `asset_sidebar`, etc. → `modules.<product>.location`
+### Location Placement - **VERIFY BEFORE GENERATING MANIFEST**
+- [ ] **Locations in correct module** ✅ - **ZERO TOLERANCE - ALWAYS VERIFY**
+  - ✅ `full_page_app` → **MUST** be in `modules.common.location`
+  - ✅ `cti_global_sidebar` → **MUST** be in `modules.common.location`
+  - ✅ `ticket_sidebar` → **MUST** be in `modules.support_ticket.location` (NOT common)
+  - ✅ `contact_sidebar` → **MUST** be in `modules.support_contact.location` (NOT common)
+  - ✅ `asset_sidebar` → **MUST** be in `modules.service_asset.location` (NOT common)
+  - ✅ `deal_entity_menu` → **MUST** be in `modules.deal.location` (NOT common)
+  - ❌ **NEVER put `full_page_app` in product modules** (support_ticket, service_ticket, etc.)
+  - ❌ **NEVER put product locations in common module**
 
 ### OAuth Structure (If OAuth is used)
 - [ ] **OAuth config has `integrations` wrapper** ✅

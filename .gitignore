@@ -39,6 +39,11 @@ build/
 *.min.js
 *.min.css
 
+# Environment (local secrets, never commit)
+.env
+.env.local
+.env.*.local
+
 # Node Modules (if any)
 node_modules/
 npm-debug.log*
@@ -85,6 +90,3 @@ TODO.md
 .github/
 .aclm/
 .clp/
-
-# Python Virtual Environment
-.venv/

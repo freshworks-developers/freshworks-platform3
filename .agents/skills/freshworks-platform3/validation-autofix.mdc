@@ -1,4 +1,5 @@
 ---
+name: validation-autofix
 description: Pre-finalization validation and autofix for Freshworks Platform 3.0 apps
 alwaysApply: true
 ---
