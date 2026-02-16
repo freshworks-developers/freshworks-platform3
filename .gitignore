@@ -90,3 +90,5 @@ TODO.md
 .github/
 .aclm/
 .clp/
+.agents/
+.cursor/
