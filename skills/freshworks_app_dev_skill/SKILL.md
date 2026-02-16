@@ -480,9 +480,9 @@ Before presenting the app, validate against:
 ## Progressive Disclosure: When to Load References
 
 ### Architecture & Modules
-- **Module structure questions** → `references/architecture/module-structure.md`
-- **Request templates** → `references/architecture/request-templates.md`
-- **OAuth integration** → `references/architecture/oauth-integration.md`
+- **Module structure questions** → `references/architecture/modular_app_concepts.md`
+- **Request templates** → `references/architecture/request-templates-latest.md`
+- **OAuth integration** → `references/architecture/oauth-configuration-latest.md`
 - **All Platform 3.0 docs** → `references/architecture/*.md` (59 files)
 
 ### Runtime & APIs
@@ -515,7 +515,7 @@ Before presenting the app, validate against:
 
 ### Manifest & Configuration
 - **Manifest structure** → `references/manifest/manifest-docs.md`
-- **Manifest validation errors** → `references/manifest/manifest-errors.md`
+- **Manifest validation errors** → `references/errors/manifest-errors.md`
 
 ### CLI & Tooling
 - **FDK commands** → `references/cli/cli-docs.md`
@@ -1738,18 +1738,5 @@ This skill provides:
 - **Comprehensive module, location, and event references**
 - **Request template and OAuth integration patterns**
 - **Jobs feature documentation**
-- **AI Actions app creation guide** (see `ai-actions.mdc`)
 
 When uncertain about any Platform 3.0 behavior, load the relevant reference file from `references/` before proceeding.
-
-## Related Skills
-
-### AI Actions App Creation
-For creating Freshworks AI Action apps (actions.json, SMI functions, automation flows):
-- **Skill File:** `ai-actions.mdc`
-- **Use When:** User wants to create an AI Action app or add actions to existing app
-- **Key Features:**
-  - Iterative action creation workflow
-  - Request/response schema guidelines
-  - Integration with validation workflow
-  - Best practices for action implementation
