@@ -7,7 +7,7 @@ Expert-level development skill for building, debugging, and reviewing Freshworks
 Install the skill using npx:
 
 ```bash
-npx skills add https://github.com/freshworks-platform3/skills/freshworks-app-dev-skill
+npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks-app-dev-skill
 ```
 
 Or install locally:
