@@ -448,7 +448,8 @@ Before presenting the app, validate against:
   - Custom iparams → `references/runtime/custom-iparams-docs.md`
 - **Data storage** → `references/runtime/keyvalue-store-docs.md`, `object-store-docs.md`
 - **Jobs/Scheduled tasks** → `references/runtime/jobs-docs.md`
-- **Actions** → `references/runtime/actions-docs.md`
+- **Actions** → `references/runtime/actions-docs.md` (detailed API docs)
+- **AI Actions** → Use `ai-actions-skill` for creating actions.json and SMI implementations
 
 ### UI Components
 - **Crayons component needed** → `references/ui/crayons-docs/{component}.md`
