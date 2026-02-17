@@ -19,6 +19,23 @@ You are an AI Actions specialist for Freshworks Platform 3.0.
 
 ---
 
+## App Architecture
+
+```
+ai-actions-app/
+├── actions.json                    # Action schemas (flat request, nested response)
+├── server/
+│   ├── server.js                   # SMI functions (flat→nested transformation)
+│   └── test_data/
+│       └── actionName.json         # Test payloads
+├── config/
+│   ├── requests.json               # External API templates
+│   └── iparams.json                # Installation parameters
+└── manifest.json                   # Platform 3.0 manifest (declares requests)
+```
+
+---
+
 ## What are AI Actions?
 
 **Concept:** A declared function catalog exposed via `actions.json` where each action has:
@@ -48,16 +65,26 @@ You are an AI Actions specialist for Freshworks Platform 3.0.
 
 ## File Structure
 
-AI Actions require two files:
+AI Actions require these files:
 
 ```
 app-root/
-├── actions.json          # Action definitions (schemas, parameters, responses)
-└── server/
-    └── server.js         # SMI function implementations
+├── actions.json                    # Action definitions (schemas, parameters, responses)
+├── server/
+│   ├── server.js                   # SMI function implementations
+│   └── test_data/
+│       └── actionName.json         # Test payload for FDK testing
+├── config/
+│   ├── requests.json               # Request templates for external APIs
+│   └── iparams.json                # Installation parameters
+└── manifest.json                   # Platform 3.0 manifest (from freshworks_app_dev_skill)
 ```
 
 **CRITICAL:** The function name in `actions.json` MUST match the function name in `server.js` (case-sensitive).
+
+**Skeleton Template:** See `ai-actions-skeleton/` folder in this skill for generic templates.
+
+**For complete app structure:** Use `freshworks-app-dev-skill` for manifest.json, .fdk/, and other app files.
 
 ---
 
