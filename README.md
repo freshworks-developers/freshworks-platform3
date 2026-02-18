@@ -27,7 +27,7 @@ npx skills add /path/to/freshworks-platform3/skills/freshworks-app-dev-skill
 ### Install AI Actions Skill
 
 ```bash
-npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill ai-actions-skill
+npx skills add https://github.com/freshworks-developers/freshworks-platform3#ai-actions --skill ai-actions-skill
 ```
 
 Or install locally:
