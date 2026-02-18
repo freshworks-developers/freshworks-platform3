@@ -92,3 +92,9 @@ TODO.md
 .clp/
 .agents/
 .cursor/
+
+# Test Apps (local testing only)
+test-apps/
+
+# FDK Test Framework (local testing only)
+fdk-test-fw/
