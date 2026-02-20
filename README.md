@@ -20,6 +20,19 @@ Or install locally:
 ```bash
 npx skills add /path/to/freshworks-platform3/skills/freshworks-app-dev-skill
 ```
+### Skip prompts (CI-friendly)
+
+Use the --yes (-y) and --global (-g) flags to install without prompts
+```bash
+npx skills add https://github.com/freshworks-developers/freshworks-platform3 --skill freshworks-app-dev-skill -g -y
+```
+### Remove skills
+npx skills remove
+npx skills remove freshworks-app-dev-skill
+
+### Check/update skills
+npx skills check
+npx skills update
 
 ## What These Skills Provide
 
@@ -64,4 +77,4 @@ MIT
 
 ## Support
 
-For issues or questions, please open an issue on GitHub.
+For issues or questions, please open an issue on this GitHub repo.

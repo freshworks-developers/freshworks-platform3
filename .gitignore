@@ -84,17 +84,11 @@ TODO.md
 # Windsurf (internal only)
 .windsurf/
 
-# Internal Infrastructure (NOT part of public skill)
-.telemetry/
+# Internal
+.telemetry
 .db/
 .github/
 .aclm/
 .clp/
 .agents/
 .cursor/
-
-# Test Apps (local testing only)
-test-apps/
-
-# FDK Test Framework (local testing only)
-fdk-test-fw/
