@@ -1,22 +1,18 @@
 <h1  align="center">Freshworks App Development Skill</h1>
 
-<p  align="center">
-
-  
-
-<strong>Expert-level Cursor AI skill for building Freshworks Platform 3.0 marketplace applications</strong>
+<p  align="center"><strong>Expert-level Cursor AI skill for building Freshworks Platform 3.0 marketplace applications</strong>
 
   
 
 <p  align="center">
 
-<a  href="https://developers.freshworks.com/docs/app-sdk/v3.0/"><img  src="https://img.shields.io/badge/Platform-3.0-blue?style=for-the-badge"  alt="Platform 3.0"></a>
+<img  src="https://img.shields.io/badge/Platform-3.0-blue?style=for-the-badge"  alt="Platform 3.0">
 
-<a  href="https://cursor.com/"><img  src="https://img.shields.io/badge/Cursor-Skill-00a67e?style=for-the-badge"  alt="Cursor Skill"></a>
+<img  src="https://img.shields.io/badge/Cursor-Skill-00a67e?style=for-the-badge"  alt="Cursor Skill">
 
-<a  href="https://crayons.freshworks.com/"><img  src="https://img.shields.io/badge/Crayons-4.x-00a67e?style=for-the-badge"  alt="Crayons"></a>
+<img  src="https://img.shields.io/badge/Crayons-4.x-00a67e?style=for-the-badge"  alt="Crayons">
 
-<a  href="https://developers.freshworks.com/docs/fdk/"><img  src="https://img.shields.io/badge/FDK-9.x-0052cc?style=for-the-badge"  alt="FDK"></a>
+<img  src="https://img.shields.io/badge/FDK-9.x-0052cc?style=for-the-badge"  alt="FDK">
 
 </p>
 
@@ -32,15 +28,11 @@
 
   
 
-<p  align="center">
+<p  align="center">A production-ready Cursor skill for building Freshworks apps.<br></p>
 
   
 
-A production-ready Cursor skill for building Freshworks apps.<br>
-
-  
-
-Enforces <strong>Platform 3.0 patterns</strong> with zero tolerance for legacy code.
+<p  align="center">Enforces <strong>Platform 3.0 patterns</strong> with zero tolerance for legacy code.
 
   
 
@@ -50,17 +42,7 @@ Enforces <strong>Platform 3.0 patterns</strong> with zero tolerance for legacy c
 
   
 
-<p  align="center">
-
-  
-
-<code>Platform 3.0</code> · <code>Cursor Rules</code> · <code>Crayons</code> · <code>Request Templates</code> · <code>OAuth</code> · <code>fdk validate</code>
-
-  
-
-</p>
-
-  
+<p  align="center"><code>Platform 3.0</code> · <code>Cursor Rules</code> · <code>Crayons</code> · <code>Request Templates</code> · <code>OAuth</code> · <code>fdk validate</code></p>  
 
   
 
